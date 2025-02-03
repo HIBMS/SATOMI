@@ -60,8 +60,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="epj.ProgressBar.Maui" Version="1.0.2" />
+		<PackageReference Include="fo-dicom" Version="5.1.5" />
+		<PackageReference Include="fo-dicom.Codecs" Version="5.15.4" />
+		<PackageReference Include="fo-dicom.Imaging.ImageSharp" Version="5.1.5" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Pages\" />
 	</ItemGroup>
 
 </Project>

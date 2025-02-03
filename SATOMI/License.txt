@@ -1,0 +1,8 @@
+Fellow Oak DICOM Library
+
+Copyright (c) 2012-2021 fo-dicom contributors.
+
+This software is licensed under the Microsoft Public License (MS-PL).
+
+The software is provided "as-is," without warranty of any kind.
+For further details, see the Microsoft Public License (MS-PL).
