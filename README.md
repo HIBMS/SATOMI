@@ -31,7 +31,7 @@ SATOMI is a lightweight and intuitive DICOM image viewer designed for mobile dev
 ### Setup
 ```sh
 # Clone the repository
-git clone https://github.com/yourusername/dicom-viewer-mobile.git
+git clone [https://github.com/yourusername/dicom-viewer-mobile.git](https://github.com/HIBMS/SATOMI.git)
 cd SATOMI
 
 # Install dependencies
