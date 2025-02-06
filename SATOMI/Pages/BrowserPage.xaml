@@ -5,64 +5,59 @@
              BackgroundColor="Black">
 
     <Shell.TitleView>
-        <Grid ColumnDefinitions="*, Auto" BackgroundColor="Black" ColumnSpacing="0" Padding="0">
-            <Label Grid.Row="0" Grid.Column="0" x:Name="LblTitle" FontSize="Micro" HorizontalOptions="Start" VerticalOptions="CenterAndExpand" TextColor="White"/>
-            <Button x:Name="BtnBack" ImageSource="ic_back.png" Text="Back" TextColor="White" Margin="2" HorizontalOptions="End" IsVisible="False" Clicked="BtnBack_Clicked"/>
+        <Grid ColumnDefinitions="*, Auto" BackgroundColor="Black" Padding="10">
+            <Label Grid.Column="0" 
+                   x:Name="LblTitle" 
+                   FontSize="Medium" 
+                   HorizontalOptions="Start" 
+                   VerticalOptions="Center" 
+                   TextColor="White"/>
+            <!--<Button x:Name="BtnBack" 
+                    ImageSource="ic_back.png" 
+                    Text="Back" 
+                    TextColor="White" 
+                    Margin="5" 
+                    HorizontalOptions="End" 
+                    IsVisible="False" 
+                    Clicked="BtnBack_Clicked"/>-->
         </Grid>
     </Shell.TitleView>
 
     <ScrollView>
-        <VerticalStackLayout
-            Spacing="0"
-            Padding="0,0"
-            VerticalOptions="StartAndExpand">
-            <ListView x:Name="LstView" ItemsSource="{Binding DirInfo}" ItemTapped="LstView_ItemTapped" >
+        <VerticalStackLayout Padding="0">
+            <ListView x:Name="LstView"
+                      ItemsSource="{Binding DirInfo}" 
+                      SeparatorVisibility="None">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ViewCell>
-                            <Grid Padding="10, 5, 10, 5" ColumnDefinitions="Auto, *, *, Auto, Auto">
-                                <!-- アイコン -->
-                                <Image Grid.Column="0"
-                                   WidthRequest="36"
-                                   HeightRequest="36"
-                                   HorizontalOptions="Start"
-                                   VerticalOptions="Center"
-                                   Source="{Binding Icon}"
-                                   Aspect="AspectFill"/>
+                            <SwipeView>
+                                <SwipeView.RightItems>
+                                    <SwipeItems Mode="Execute" >
+                                        <SwipeItem x:Name="SwipeItemOpen"
+                                                   Text="Open"
+                                                   BackgroundColor="{Binding SwipeColor}"
+                                                   Invoked="OnSwipeOpen"
+                                                   CommandParameter="{Binding Location}"
+                                                   >
+                                        </SwipeItem>
+                                    </SwipeItems>
+                                </SwipeView.RightItems>
 
-                                <!-- 名前 -->
-                                <Label Grid.Column="1"
-                                   Padding="10,0,0,0"
-                                   VerticalOptions="Center"
-                                   Text="{Binding Name}"
-                                   TextColor="White"
-                                   FontAttributes="None" />
-
-                                <!--情報--> 
-                                <Label Grid.Column="2"
-                                   Padding="0,0,10,0"
-                                   IsVisible="{Binding IsNotSelected}"
-                                   FontSize="Micro"
-                                   HorizontalOptions="End"
-                                   VerticalOptions="Center"
-                                   Text="{Binding Info}"
-                                   TextColor="White"
-                                   FontAttributes="None" />
-
-                                <!-- 選択ボタン -->
-                                <Button Grid.Column="4"
-                                    x:Name="BtnSelected"
-                                    Padding="0"
-                                    BackgroundColor="White"
-                                    IsVisible="{Binding IsSelected}"
-                                    WidthRequest="100"
-                                    HeightRequest="30"
-                                    VerticalOptions="Center"
-                                    Text="Select"
-                                    TextColor="Black"
-                                    HorizontalOptions="Center"
-                                    Clicked="BtnSelected_Clicked"/>
-                            </Grid>
+                                <Grid Padding="5,10" ColumnDefinitions="Auto">
+                                    
+                                    <StackLayout Grid.Column="1" Padding="10,0,0,0" VerticalOptions="Center">
+                                        <Label Text="{Binding Name}"
+                                               TextColor="White"
+                                               FontSize="Medium"/>
+                                    </StackLayout>
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer 
+                                NumberOfTapsRequired="2" 
+                                Tapped="OnItemDoubleTapped"/>
+                                    </Grid.GestureRecognizers>
+                                </Grid>
+                            </SwipeView>
                         </ViewCell>
                     </DataTemplate>
                 </ListView.ItemTemplate>

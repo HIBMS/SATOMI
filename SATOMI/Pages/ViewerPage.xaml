@@ -36,7 +36,7 @@
     <!--</Shell.TitleView>-->
 
     <ContentPage.Resources>
-        <drawables:FrameDraw x:Key="FrameDraw" />
+        <drawables:CanvasDraw x:Key="FrameDraw" />
     </ContentPage.Resources>
 
 

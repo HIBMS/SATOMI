@@ -13,7 +13,7 @@ using Android.Graphics;
 #endif
 namespace SATOMI.Pages
 {
-    internal class FrameDraw : IDrawable
+    internal class CanvasDraw : IDrawable
     {
         private static byte[] Convert16BitTo8Bit(ushort[] pixelData, int width, int height, double windowWidth, double windowCenter)
         {
@@ -34,7 +34,7 @@ namespace SATOMI.Pages
             if (!ViewerPage.CanDraw) return;
             if (UI.ImageInfo._current_img == null)
             {
-                ushort[] data = ViewerPage.GetCurrentFramePixeldata();
+                ushort[] data = ViewerPage.GetCurrentSliceOfPixeldata();
                 if (data == null)
                     return;
                 var image_8bit = Convert16BitTo8Bit(data, UI.ImageInfo.current_img_width, UI.ImageInfo.current_img_height, UI.ImageInfo.WW, UI.ImageInfo.WL);

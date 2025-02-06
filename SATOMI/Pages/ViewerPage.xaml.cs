@@ -28,14 +28,14 @@ namespace SATOMI.Pages
             WWWLManager.SelectedIndex = 0;
         }
 
-        public static FrameCollection _framec = new FrameCollection();
+        public static SliceCollection _slicec = new SliceCollection();
 
         string _location = "";
         public string Location { get => _location; set => _location = Uri.UnescapeDataString(value); }
         private bool IsFolder { get => Location.EndsWith("/"); }
 
-        private static int _totalFrames = -1;
-        private static int _currentFrame = -1;
+        private static int _totalSlices = -1;
+        private static int _currentSlice = -1;
 
         //public static int current_img_width = 0;
         //public static int current_img_height = 0;
@@ -48,8 +48,6 @@ namespace SATOMI.Pages
         public static double _offsetY = 0.0f;
 
         public static bool CanDraw = false;
-        //public static byte[]? _current_img = null;
-        //public static Microsoft.Maui.Graphics.IImage? _current_img = null;
         private bool _servicesRegistered = false;
         public static int _rootIdx = 0;
 
@@ -71,7 +69,7 @@ namespace SATOMI.Pages
 
         private void _loadFromRoot()
         {
-            if (_framec.Frames.Count == 0)
+            if (_slicec.Slices.Count == 0)
                 return;
 
             //int rootIdx = PickerRoot.SelectedIndex;
@@ -82,29 +80,29 @@ namespace SATOMI.Pages
 
                 if (root.IsFolder)
                 {
-                    _totalFrames = _framec.Frames.Count(frame => frame.OriginalDirectory == root.FullFolderPath);
-                    _currentFrame = 0;
+                    _totalSlices = _slicec.Slices.Count(frame => frame.OriginalDirectory == root.FullFolderPath);
+                    _currentSlice = 0;
                 }
                 else
                 {
-                    _totalFrames = _framec.Frames.Count(frame => frame.DicomLoc == root.FilePath);
-                    _currentFrame = 0;
+                    _totalSlices = _slicec.Slices.Count(frame => frame.DicomLoc == root.FilePath);
+                    _currentSlice = 0;
                 }
             }
 
-            if (_totalFrames > 1)
+            if (_totalSlices > 1)
             {
                 // Initilize
                 SliderFrame.Minimum = 1.0d;
                 SliderFrame.Value = 0.0d;
-                SliderFrame.Maximum = (double)_totalFrames;
+                SliderFrame.Maximum = (double)_totalSlices;
                 LblEndSlider.Text = SliderFrame.Maximum.ToString("#");
                 LblStartSlider.Text = SliderFrame.Minimum.ToString("#");
                 var mainDisplayInfo = DeviceDisplay.MainDisplayInfo;
                 _delta_panY = mainDisplayInfo.Height / mainDisplayInfo.Density * 0.5 - GFX.Height * 0.5 ;
                 _offsetY = _delta_panY - (_pivotY * (_currentScale - 1));
-                UI.ImageInfo.WW = _framec.WW;
-                UI.ImageInfo.WL = _framec.WL;
+                UI.ImageInfo.WW = _slicec.WW;
+                UI.ImageInfo.WL = _slicec.WL;
                 //EntryWindowLevel.Text = UI.ViewInfo.WL.ToString();
                 //EntryWindowWidth.Text = UI.ViewInfo.WW.ToString();
             }
@@ -118,14 +116,14 @@ namespace SATOMI.Pages
             ResetVars();
             if (!IsFolder)
             {
-                await _framec.FromFile(loc);
+                await _slicec.FromFile(loc);
             }
             else
             {
                 List<string> files = new List<string>();
                 try
                 {
-                    string[] get_files = Directory.GetFiles(loc, "*.*", SearchOption.AllDirectories);
+                    string[] get_files = Directory.GetFiles(loc, "*.*", SearchOption.TopDirectoryOnly);
                     foreach (string f in get_files)
                     {
                         string fileName = System.IO.Path.GetFileName(f);
@@ -135,7 +133,7 @@ namespace SATOMI.Pages
                 }
                 catch (UnauthorizedAccessException) { }
 
-                await _framec.FromFiles(files);
+                await _slicec.FromFiles(files);
             }
 
             await _loadUI();
@@ -148,12 +146,12 @@ namespace SATOMI.Pages
             {
                 //BtnFocusPicker.IsVisible = UI.ImageRoots.Count > 1;
 
-                if (_framec.Frames.Count == 0)
+                if (_slicec.Slices.Count == 0)
                 {
                     CanDraw = false;
                     GridProgBar.IsVisible = false;
-                    GridHeader.IsVisible = false;
-                    GridBottom.IsVisible = false;
+                    GridHeader.IsVisible = true;
+                    GridBottom.IsVisible = true;
                     _ = DisplayAlert("Failed", "No DICOM or image files found.", "OK");
                     return;
                 }
@@ -172,10 +170,10 @@ namespace SATOMI.Pages
         private void ResetVars()
         {
             CanDraw = false;
-            _currentFrame = 0;
+            _currentSlice = 0;
 
-            _framec.Frames.Clear();
-            _framec = new FrameCollection();
+            _slicec.Slices.Clear();
+            _slicec = new SliceCollection();
 
             var mainDisplayInfo = DeviceDisplay.MainDisplayInfo;
             var uiWidth = mainDisplayInfo.Width / mainDisplayInfo.Density;
@@ -208,10 +206,10 @@ namespace SATOMI.Pages
             if (!CanDraw)
                 return;
 
-            if (val < _totalFrames && val >= 0)
+            if (val < _totalSlices && val >= 0)
             {
-                _currentFrame = val;
-                LblFrameNo.Text = $"[{_currentFrame + 1}/{_totalFrames}]";
+                _currentSlice = val;
+                LblFrameNo.Text = $"[{_currentSlice + 1}/{_totalSlices}]";
                 //LblCurrentZoom.Text = $"[{_currentFrame + 1}/{_totalFrames}]";
                 _setInfoModel();
                 //DrawImage();
@@ -426,70 +424,50 @@ namespace SATOMI.Pages
 
         private void _setInfoModel()
         {
-            if (_totalFrames <= 0 || _currentFrame < -1 || _currentFrame >= _totalFrames || _rootIdx < 0)
+            if (_totalSlices <= 0 || _currentSlice < -1 || _currentSlice >= _totalSlices || _rootIdx < 0)
             {
                 _resetInfoModel();
                 return;
             }
 
             ImageRoot root = UI.ImageRoots[_rootIdx];
-            int actualFrameIdx = _framec.Frames.FindIndex(f => f.Number == _currentFrame && f.OriginalDirectory == root.FullFolderPath);
+            int actualFrameIdx = _slicec.Slices.FindIndex(f => f.Number == _currentSlice && f.OriginalDirectory == root.FullFolderPath);
 
-            if (actualFrameIdx >= _framec.Frames.Count)
+            if (actualFrameIdx >= _slicec.Slices.Count)
             {
                 _resetInfoModel();
                 return;
             }
             if (actualFrameIdx == -1)
             {
-                Console.WriteLine("Frame not found: Current Frame = " + _currentFrame + ", Root Path = " + root.FullFolderPath);
+                Console.WriteLine("Frame not found: Current Frame = " + _currentSlice + ", Root Path = " + root.FullFolderPath);
                 return;
             }
-            UI.InfoView.PatientInfo = _framec.Frames[actualFrameIdx].Info.PatientDetails;
-            UI.InfoView.StudyInfo = _framec.Frames[actualFrameIdx].Info.StudyDetails;
+            UI.InfoView.PatientInfo = _slicec.Slices[actualFrameIdx].Info.PatientDetails;
+            UI.InfoView.StudyInfo = _slicec.Slices[actualFrameIdx].Info.StudyDetails;
 
         }
-        public static byte[]? GetCurrentFrameBuffer()
+
+        public static ushort[]? GetCurrentSliceOfPixeldata()
         {
-            if (_totalFrames <= 0 || _currentFrame < -1 || _currentFrame >= _totalFrames || _rootIdx < 0)
+            if (_totalSlices <= 0 || _currentSlice < -1 || _currentSlice >= _totalSlices || _rootIdx < 0)
                 return null;
 
             ImageRoot root = UI.ImageRoots[_rootIdx];
-            int actualFrameIdx = _framec.Frames.FindIndex(f => f.Number == _currentFrame && f.OriginalDirectory == root.FullFolderPath);
+            int actualFrameIdx = _slicec.Slices.FindIndex(f => f.Number == _currentSlice && f.OriginalDirectory == root.FullFolderPath);
 
-            if (actualFrameIdx >= _framec.Frames.Count)
+            if (actualFrameIdx >= _slicec.Slices.Count)
                 return null;
 
             if (actualFrameIdx == -1)
             {
-                Console.WriteLine("Frame not found: Current Frame = " + _currentFrame + ", Root Path = " + root.FullFolderPath);
+                Console.WriteLine("Frame not found: Current Frame = " + _currentSlice + ", Root Path = " + root.FullFolderPath);
                 return null;
             }
-            UI.ImageInfo.current_img_height = _framec.Frames[actualFrameIdx].Height;
-            UI.ImageInfo.current_img_width = _framec.Frames[actualFrameIdx].Width;
+            UI.ImageInfo.current_img_height = _slicec.Slices[actualFrameIdx].Height;
+            UI.ImageInfo.current_img_width = _slicec.Slices[actualFrameIdx].Width;
 
-            return _framec.Frames[actualFrameIdx].Buffer;
-        }
-        public static ushort[]? GetCurrentFramePixeldata()
-        {
-            if (_totalFrames <= 0 || _currentFrame < -1 || _currentFrame >= _totalFrames || _rootIdx < 0)
-                return null;
-
-            ImageRoot root = UI.ImageRoots[_rootIdx];
-            int actualFrameIdx = _framec.Frames.FindIndex(f => f.Number == _currentFrame && f.OriginalDirectory == root.FullFolderPath);
-
-            if (actualFrameIdx >= _framec.Frames.Count)
-                return null;
-
-            if (actualFrameIdx == -1)
-            {
-                Console.WriteLine("Frame not found: Current Frame = " + _currentFrame + ", Root Path = " + root.FullFolderPath);
-                return null;
-            }
-            UI.ImageInfo.current_img_height = _framec.Frames[actualFrameIdx].Height;
-            UI.ImageInfo.current_img_width = _framec.Frames[actualFrameIdx].Width;
-
-            return _framec.Frames[actualFrameIdx].Pixeldata;
+            return _slicec.Slices[actualFrameIdx].Pixeldata;
         }
     }
 }

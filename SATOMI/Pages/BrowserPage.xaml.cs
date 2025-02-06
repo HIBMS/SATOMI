@@ -1,175 +1,225 @@
-using System.Collections.ObjectModel;
-using System.Reflection;
+Ôªøusing System.Collections.ObjectModel;
+using System.IO;
+using System.Threading.Tasks;
+using System;
+using System.Windows.Input;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
 
-namespace SATOMI.Pages;
-
-public partial class BrowserPage : ContentPage
+namespace SATOMI.Pages
 {
-    string _currentPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-    public ObservableCollection<FileFolderView> DirInfo { get; } = new() { };
-
-    public BrowserPage()
+    public partial class BrowserPage : ContentPage
     {
-        InitializeComponent();
-        _ = Initialize();
-    }
+        string _currentPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        public ObservableCollection<FileFolderView> DirInfo { get; } = new();
+        public ICommand SwipeOpenCommand { get; }
 
-    private async Task Initialize()
-    {
-        LstView.ItemsSource = DirInfo; //set the UI binding
-        try
+        public BrowserPage()
         {
-#if ANDROID
-            if ((int)Android.OS.Build.VERSION.SdkInt < 23)
+            InitializeComponent();
+            _ = Initialize();
+        }
+
+        private async void OnSwipeOpen(object sender, EventArgs e)
+        {
+            FileFolderView? selectedItem = LstView.SelectedItem as FileFolderView;
+            if (selectedItem == null)
             {
+                Debug.Write("selectedItem is null");
                 return;
             }
-            else
+
+            // Áä∂ÊÖã„ÇíÊõ¥Êñ∞
+            foreach (var item in DirInfo)
             {
-            }
-            // Get External Storage Directory
-            var externalStorage = Android.OS.Environment.ExternalStorageDirectory;
-            if (externalStorage != null && !string.IsNullOrEmpty(externalStorage.AbsolutePath))
-            {
-                _currentPath = externalStorage.AbsolutePath;
-            }
-            else
-            {
-                // ExternalStorageDirectoryÇ™nullÇ‹ÇΩÇÕãÛÇÃèÍçáÇÃÉtÉHÅ[ÉãÉoÉbÉNèàóù
-                _currentPath = Android.App.Application.Context.GetExternalFilesDir(null)?.AbsolutePath ?? string.Empty;
-                if (string.IsNullOrEmpty(_currentPath))
+                if (item.Location == selectedItem.Location)
                 {
-                    _currentPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments); // ç≈èIÉtÉHÅ[ÉãÉoÉbÉN
+                    item.IsSelected = !item.IsSelected;
                 }
             }
-#else
-             _currentPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-#endif
-            // Load List View
-             await _loadLstView(_currentPath); 
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"ÉXÉgÉåÅ[ÉWèâä˙âªÉGÉâÅ[: {ex.Message}");
-            _currentPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments); // ÉtÉHÅ[ÉãÉoÉbÉN
-            await _loadLstView(_currentPath); 
-        }
-    }
 
-
-    private async Task _loadLstView(string? path)
-    {
-        try
-        {
-            if (path != null)
+            if (selectedItem.IsFolder && selectedItem.HasChildren)
             {
-                LstView.BeginRefresh();
+                await _loadLstView(selectedItem.Location);
+            }
+        }
 
-                _prevTappedLoc = null;
-                _prevTappedIsFolder = false;
-
-                // îÒìØä˙Ç≈ÉfÉBÉåÉNÉgÉäÇ∆ÉtÉ@ÉCÉãÇéÊìæ
-                var dirs = await Task.Run(() => Directory.GetDirectories(path));
-                var files = await Task.Run(() => Directory.GetFiles(path));
-
-                if (dirs.Length + files.Length <= 0)
-                    return;
-
-                DirInfo.Clear();
-
-                foreach (var dir in dirs)
-                    DirInfo.Add(new FileFolderView(dir, true));
-                foreach (var file in files)
-                    DirInfo.Add(new FileFolderView(file, false));
-
-                _currentPath = path;
-                LblTitle.Text = path;
-                string? parentDir = Directory.GetParent(path)?.ToString();
-                if (parentDir != null)
+        private async Task Initialize()
+        {
+            LstView.ItemsSource = DirInfo;
+            try
+            {
+#if ANDROID
+                if ((int)Android.OS.Build.VERSION.SdkInt < 23)
                 {
-                    BtnBack.IsVisible = parentDir != path;
+                    return;
                 }
                 else
                 {
-                    BtnBack.IsVisible = false; // ÉãÅ[ÉgÉfÉBÉåÉNÉgÉäÇÃèÍçáÇÕBackÉ{É^ÉìÇï\é¶ÇµÇ»Ç¢
+                    var externalStorage = Android.OS.Environment.ExternalStorageDirectory;
+                    _currentPath = externalStorage?.AbsolutePath ?? Android.App.Application.Context.GetExternalFilesDir(null)?.AbsolutePath ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                }
+#else
+                _currentPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+#endif
+                await _loadLstView(_currentPath);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"„Çπ„Éà„É¨„Éº„Ç∏ÂàùÊúüÂåñ„Ç®„É©„Éº: {ex.Message}");
+                _currentPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                await _loadLstView(_currentPath);
+            }
+        }
+
+        private async Task _loadLstView(string? path)
+        {
+            try
+            {
+                if (path == null) return;
+
+                _ = MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    LstView.BeginRefresh();
+                });
+
+                var dirs = await Task.Run(() => Directory.GetDirectories(path)
+                                                         .Where(d => !d.Contains("System") &&
+                                                                     !d.EndsWith("Thumbs.db") &&
+                                                                     !d.Contains(".thumbnails"))
+                                                         .ToArray());
+
+                DirInfo.Clear();
+
+                var parentDir = Directory.GetParent(path)?.FullName;
+                if (parentDir != null)
+                {
+                    DirInfo.Add(new FileFolderView(parentDir, true, false, true, true));
+                }
+
+                foreach (var dir in dirs)
+                {
+                    DirInfo.Add(new FileFolderView(dir, true));
+                }
+
+                _currentPath = path;
+
+                _ = MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    LblTitle.Text = path;
+                });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    await DisplayAlert("„Ç¢„ÇØ„Çª„ÇπÊãíÂê¶", "„Åì„ÅÆ„Éá„Ç£„É¨„ÇØ„Éà„É™„Å´„Ç¢„ÇØ„Çª„Çπ„Åô„ÇãÊ®©Èôê„Åå„ÅÇ„Çä„Åæ„Åõ„Çì„ÄÇ", "OK");
+                });
+            }
+            catch (Exception ex)
+            {
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    await DisplayAlert("„Ç®„É©„Éº", $"„Ç®„É©„Éº„ÅåÁô∫Áîü„Åó„Åæ„Åó„Åü: {ex.Message}", "OK");
+                });
+            }
+            finally
+            {
+                await Task.Delay(100); // UI „Çπ„É¨„ÉÉ„Éâ„Å´Âá¶ÁêÜ„ÅÆ‰ΩôË£ï„Çí‰∏é„Åà„Çã
+                _ = MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    LstView.EndRefresh();
+                });
+            }
+        }
+
+        private async void OnItemDoubleTapped(object sender, EventArgs e)
+        {
+            var tappedItem = (sender as View)?.BindingContext as FileFolderView;
+            if (tappedItem != null)
+            {
+                if (tappedItem.Backbtn)
+                {
+                    var parentDir = Directory.GetParent(_currentPath)?.FullName;
+                    if (parentDir != null && parentDir != _currentPath)
+                    {
+                        await _loadLstView(parentDir);
+                    }
+                }
+                else
+                {
+                    string loc = tappedItem.Location;
+                    if (tappedItem.IsFolder && !loc.EndsWith("/"))
+                    {
+                        loc = string.Concat(loc, "/");
+                    }
+                    await Shell.Current.GoToAsync($"//ViewerPage?Location={loc}");
                 }
             }
         }
-        catch (UnauthorizedAccessException)
-        {
-            _ = DisplayAlert("Insufficient Privileges", $"Unauthorized access to {path}", "Ok");
-            BtnBack.IsVisible = false;
-        }
-        catch (TargetInvocationException)
-        {
-            await DisplayAlert("Insufficient Permissions", $"Read/Write permissions have not been granted.", "Ok");
-            BtnBack.IsVisible = false;
-        }
-        finally
-        {
-            LstView.EndRefresh();
-        }
-    }
 
+        public class FileFolderView : INotifyPropertyChanged
+        {
+            public string Location { get; }
+            public string SwipeText { get; }
+            public Color SwipeColor { get; }
+            public bool IsSelected { get; set; }
+            public bool IsFolder { get; }
+            public bool IsParent { get; }
+            public string Name => IsParent ? "..ÔºàË¶™„Éï„Ç©„É´„ÉÄ„Å∏Êàª„ÇãÔºâ" : Path.GetFileName(Location);
+            public string Icon => IsParent ? "up_folder_icon.png" : (IsSelected ? "selected_folder_icon.png" : "folder_icon.png");
+            public bool HasChildren { get; }
+            public bool CanSwipe { get; }
+            public bool Backbtn { get; }
+            public event PropertyChangedEventHandler PropertyChanged;
 
-    private string? _prevTappedLoc = string.Empty;
-    private bool _prevTappedIsFolder = false;
-    private void LstView_ItemTapped(object sender, ItemTappedEventArgs e)
-    {
-        FileFolderView? selectedItem = LstView.SelectedItem as FileFolderView;
-        if (selectedItem == null)
-        {
-            // selectedItem Ç™ null ÇÃèÍçáÇÕèàóùÇíÜíf
-            return;
-        }
-        //Update IsSelected Property
-        for (int i = 0; i < DirInfo.Count; i++)
-        {
-            bool isSelected = DirInfo[i].Location == selectedItem.Location;
-            if (DirInfo[i].IsSelected != isSelected)
-                DirInfo[i] = new FileFolderView(DirInfo[i].Location, DirInfo[i].IsFolder, isSelected);
-        }
+            public FileFolderView(string location, bool isFolder, bool isSelected = false, bool isParent = false, bool back = false)
+            {
+                Location = location;
+                IsFolder = isFolder;
+                IsSelected = isSelected;
+                IsParent = isParent;
 
-        //If Double Tapped -> Expand Folder
-        if (_prevTappedLoc == selectedItem.Location)
-        {
-            if (selectedItem.IsFolder && selectedItem.HasChildren)
-                _ = _loadLstView(selectedItem.Location);
-        }
-        _prevTappedLoc = selectedItem.Location;
-        _prevTappedIsFolder = selectedItem.IsFolder;
-    }
-
-    private void BtnBack_Clicked(object sender, EventArgs e)
-    {
-        string? parentDir = Directory.GetParent(_currentPath)?.ToString();
-        if (parentDir == null)
-        {
-            // _currentPath Ç™ÉãÅ[ÉgÉfÉBÉåÉNÉgÉäÇÃèÍçáÇ‚ parentDir Ç™ null ÇÃèÍçáÇÃèàóù
-            // ïKóvÇ…âûÇ∂ÇƒìKêÿÇ»èàóùÇçsÇ¡ÇƒÇ≠ÇæÇ≥Ç¢
-        }
-        _ = _loadLstView(parentDir);
-    }
-
-    private async void BtnSelected_Clicked(object sender, EventArgs e)
-    {
-        if (_prevTappedLoc != null)
-        {
-            string loc = _prevTappedLoc;
-            if (_prevTappedIsFolder && !_prevTappedLoc.EndsWith("/"))
-                loc = string.Concat(_prevTappedLoc, "/");
-            await Shell.Current.GoToAsync($"//ViewerPage?Location={loc}");
-        }
-    }
-
-    private async void BtnCashClear_Clicked(object sender, EventArgs e)
-    {
-        if (_prevTappedLoc != null)
-        {
-            string loc = _prevTappedLoc;
-            if (_prevTappedIsFolder && !_prevTappedLoc.EndsWith("/"))
-                loc = string.Concat(_prevTappedLoc, "/");
-                    await Shell.Current.GoToAsync($"//ViewerPage?Location={loc}");
+                if (back)
+                {
+                    Backbtn = true;
+                    CanSwipe = false;
+                    SwipeText = "          cannot perform a swipe action.";
+                    SwipeColor = Colors.Gray;
+                }
+                else
+                {
+                    Backbtn = false;
+                    if (isFolder)
+                    {
+                        try
+                        {
+                            HasChildren = Directory.GetDirectories(Location)
+                                                                .Where(d => !d.Contains("System") &&
+                                                                !d.EndsWith("Thumbs.db") &&
+                                                                !d.Contains(".thumbnails"))
+                                                                .Any();
+                            CanSwipe = HasChildren;
+                            SwipeText = HasChildren ? "          open directory" : "          not found child directory";
+                            SwipeColor = HasChildren ? Colors.DarkBlue : Colors.Gray;
+                        }
+                        catch (Exception)
+                        {
+                            HasChildren = false;
+                            CanSwipe = false;
+                            SwipeText = "          cannot perform a swipe action.";
+                            SwipeColor = Colors.Gray;
+                        }
+                    }
+                    else
+                    {
+                        HasChildren = false;
+                        SwipeText = "          cannot perform a swipe action.";
+                        SwipeColor = Colors.Gray;
+                    }
+                }
+            }
         }
     }
 }
