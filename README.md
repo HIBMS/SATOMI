@@ -31,14 +31,12 @@ SATOMI is a lightweight and intuitive DICOM image viewer designed for mobile dev
 ### Setup
 ```sh
 # Clone the repository
-git clone https://github.com/HIBMS/SATOMI.git
-cd SATOMI
-
-# Install dependencies
-npm install # or flutter pub get
-
-# Run the project
-npm start # or flutter run
+1. Clone the repository:
+   git clone https://github.com/HIBMS/SATOMI.git
+   cd SATOMI
+2. Open the project in Visual Studio.
+3. Restore NuGet packages.
+4. Build and run the project for Android (iOS testing is not yet conducted).
 ```
 
 ## License
