@@ -43,5 +43,5 @@ SATOMI is a lightweight and intuitive DICOM image viewer designed for mobile dev
 ## License
 This project is licensed under the MIT License. 
 
-## Contributors
+## Author
 - Hyogo Ion Beam Medical Support(https://hibms-hyogo.co.jp/)
