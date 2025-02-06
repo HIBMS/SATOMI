@@ -1,6 +1,7 @@
 # SATOMI（DICOM Viewer for Smartphone）
 
 ## Overview
+**This software is for research and educational purposes only. It is not intended for clinical use.**
 SATOMI is a lightweight and intuitive DICOM image viewer designed for mobile devices. It allows healthcare professionals to view and analyze medical images on their smartphones with ease.
 
 ## Features
