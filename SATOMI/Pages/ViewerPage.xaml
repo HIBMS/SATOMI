@@ -7,39 +7,9 @@
              xmlns:local="clr-namespace:SATOMI.Pages"
              BackgroundColor="#000000"
              Title="">
-    <!--<Shell.TitleView>-->
-        <!--<HorizontalStackLayout>
-                <Picker x:Name="PickerRoot"
-                        HorizontalOptions="Start" VerticalOptions="CenterAndExpand"
-                        Grid.Row="0" Grid.Column="0"
-                        TextColor="Black"
-                        IsEnabled="False"
-                        SelectedIndexChanged="PickerRoot_SelectedIndexChanged"
-                        Title=""/>
-
-            </HorizontalStackLayout>
-            <Button x:Name="BtnImport" ImageSource="ic_plus.png" Text="Select File/Folder" Margin="2" 
-                    Clicked="BtnImport_Clicked" BackgroundColor="{StaticResource Primary}" HorizontalOptions="End"/>
-            -->
-        <!-- WindowLabel テキストボックス -->
-        <!--
-            <Label Text="Window Label:" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="1" Grid.Column="0"/>
-            <Entry x:Name="EntryWindowLabel" Placeholder="Enter Window Label" Grid.Row="1" Grid.Column="1" />
-
-            -->
-        <!-- Width テキストボックス -->
-        <!--
-            <Label Text="Width:" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="2" Grid.Column="0"/>
-            <Entry x:Name="EntryWidth" Placeholder="Enter Width" Keyboard="Numeric" Grid.Row="2" Grid.Column="1"/>-->
-        <!-- Picker の配置 -->
-        
-    <!--</Shell.TitleView>-->
-
     <ContentPage.Resources>
         <drawables:CanvasDraw x:Key="FrameDraw" />
     </ContentPage.Resources>
-
-
     <!-- メインコンテナ -->
     <Grid>
         <Grid.RowDefinitions>
@@ -47,7 +17,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="70"/>
         </Grid.RowDefinitions>
-        
+
         <GraphicsView x:Name="GFX"
                   Grid.Row="0"
                   Grid.RowSpan="3"
@@ -64,40 +34,22 @@
         </GraphicsView>
 
         <!-- DICOM情報を表示するGrid -->
-        <Grid x:Name="GridDicomInfo"
-          Grid.Row="1"
-          Padding="10"
-          Grid.RowSpan="3"
-          VerticalOptions="Start"
-          BackgroundColor="#00000080"
-          Margin="10"
-          BindingContext="{Binding DicomInfoModel}"
-          AbsoluteLayout.LayoutBounds="0, 0, 1, 1"
-          AbsoluteLayout.LayoutFlags="All"
-          >
+        <Grid x:Name="GridDicomInfo" x:DataType="local:DicomInfoModel"
+              Grid.Row="1" Padding="10" Grid.RowSpan="3" VerticalOptions="Start"
+              BackgroundColor="#00000080"
+              Margin="10"
+              AbsoluteLayout.LayoutBounds="0, 0, 1, 1"
+              AbsoluteLayout.LayoutFlags="All">
             <Label x:Name="LblPatientInfo" FontSize="Small" Text="{Binding PatientInfo}" TextColor="White" HorizontalOptions="Start" />
             <Label x:Name="LblStudyInfo" FontSize="Micro" Text="{Binding StudyInfo}" TextColor="White" HorizontalOptions="End" />
         </Grid>
-        <Grid x:Name="GridProgBar"
-          Padding="0,0,0,50"
-          VerticalOptions="End"
-          IsVisible="False"
-          BindingContext="{Binding ProgressModel}"
-          AbsoluteLayout.LayoutBounds="0, 0, 1, 1"
-          AbsoluteLayout.LayoutFlags="All"
-          Grid.Row="1">
+        
+        <Grid x:Name="GridProgBar" x:DataType="local:ProgressModel" Padding="0,0,0,50" VerticalOptions="End" IsVisible="False"
+              AbsoluteLayout.LayoutBounds="0, 0, 1, 1" AbsoluteLayout.LayoutFlags="All" Grid.Row="1">
             <VerticalStackLayout>
-                <epj:ProgressBar
-                x:Name="ProgBar"
-                BaseColor="White"
-                VerticalOptions="End"
-                HeightRequest="10"
-                Margin="15,0"
-                Progress="{Binding PFloat}"
-                UseGradient="True"
-                ProgressColor="Cyan"
-                GradientColor="LimeGreen" />
-
+                <epj:ProgressBar x:Name="ProgBar" BaseColor="White" VerticalOptions="End"
+                                 HeightRequest="10" Margin="15,0" Progress="{Binding PFloat}"
+                                 UseGradient="True" ProgressColor="Cyan" GradientColor="LimeGreen" />
                 <Grid x:Name="GridProgBarLbls">
                     <Label x:Name="LblPercentProgress" TextColor="White" Text="{Binding PPercent}" HorizontalOptions="Center" />
                     <Label x:Name="LblImageNumberProgress" TextColor="White" Text="{Binding PText}" Padding="0,0,15,0" FontSize="Micro" HorizontalOptions="End" />
@@ -107,21 +59,17 @@
         <!-- 上部UI-->
         <Grid x:Name="GridHeader" BackgroundColor="Transparent" RowDefinitions="*,*,*" ColumnDefinitions="*, *, Auto" ColumnSpacing="10" Padding="0" Grid.Row="0">
             <Button x:Name="BtnImport" ImageSource="ic_plus.png" Text="Select File/Folder" Margin="2"   Grid.RowSpan="2"
-Clicked="BtnImport_Clicked" BackgroundColor="{StaticResource Primary}" HorizontalOptions="End" Grid.Row="0" Grid.Column="2"/>
-            <!-- WindowLabel と Width の入力ボックス -->
-            <!--<Label Text="Window Label:" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="0" Grid.Column="0"/>-->
+                    Clicked="BtnImport_Clicked" BackgroundColor="{StaticResource Primary}" HorizontalOptions="End" Grid.Row="0" Grid.Column="2"/>
             <Label Text="Window Level:" TextColor="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="0" Grid.Column="0"/>
-            <Entry x:Name="EntryWindowLevel" Text="{Binding WL}" Keyboard="Numeric" Completed="Entry_Completed"
-           TextColor="{StaticResource Secondary}"  PlaceholderColor="Gray"
-           FontSize="14"
-           HorizontalTextAlignment="Center"
-           Grid.Row="1" Grid.Column="0" />
+            <Entry x:Name="EntryWindowLevel" x:DataType="local:ImageInfoModel"
+                   Text="{Binding WL}" Keyboard="Numeric" Completed="Entry_Completed"
+                   TextColor="{StaticResource Secondary}"  PlaceholderColor="Gray"
+                   FontSize="14" HorizontalTextAlignment="Center" Grid.Row="1" Grid.Column="0" />
             <Label Text="Window Width:" TextColor="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="0" Grid.Column="1"/>
-            <Entry x:Name="EntryWindowWidth"  Text="{Binding WW}" Keyboard="Numeric" Completed="Entry_Completed"
-           TextColor="{StaticResource Secondary}"  PlaceholderColor="Gray"
-           FontSize="14" 
-           HorizontalTextAlignment="Center"
-            Grid.Row="1" Grid.Column="1"/>
+            <Entry x:Name="EntryWindowWidth" x:DataType="local:ImageInfoModel" 
+                   Text="{Binding WW}" Keyboard="Numeric" Completed="Entry_Completed"
+                   TextColor="{StaticResource Secondary}"  PlaceholderColor="Gray"
+                   FontSize="14" HorizontalTextAlignment="Center" Grid.Row="1" Grid.Column="1"/>
             <Picker x:Name="WWWLManager" Grid.Column="0" SelectedIndexChanged="OnPickerSelectedIndexChanged" Grid.Row ="2"  Grid.ColumnSpan="2" HorizontalTextAlignment="Center" SelectedIndex="0" TextColor="{StaticResource Secondary}" >
                 <Picker.ItemsSource>
                     <x:Array Type="{x:Type x:String}">
@@ -145,6 +93,7 @@ Clicked="BtnImport_Clicked" BackgroundColor="{StaticResource Primary}" Horizonta
                             Minimum="1"
                             Maximum="100"
                             Value="50"
+                            HeightRequest="40"
                             ThumbColor="#018AD7"
                             MinimumTrackColor="#018AD7"
                             MaximumTrackColor="White"

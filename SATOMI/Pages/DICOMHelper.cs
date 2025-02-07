@@ -35,10 +35,15 @@ namespace SATOMI.Pages
 
             return Android.Graphics.Bitmap.CreateScaledBitmap(bitmap, scaledWidth, scaledHeight, true);
         }
-        private static Android.Graphics.Bitmap ConvertToBitmap(byte[] pixelData, int width, int height)
+        private static Android.Graphics.Bitmap? ConvertToBitmap(byte[] pixelData, int width, int height)
         {
             // Bitmapを作成
-            var bitmap = Android.Graphics.Bitmap.CreateBitmap(width, height, Android.Graphics.Bitmap.Config.Argb8888);
+            var bmp_conf = Android.Graphics.Bitmap.Config.Argb8888;
+            if(bmp_conf == null)
+            {
+                return null;
+            }
+            var bitmap = Android.Graphics.Bitmap.CreateBitmap(width, height, bmp_conf);
             //var bitmap = Android.Graphics.Bitmap.CreateBitmap(width, height, Android.Graphics.Bitmap.Config.Rgb565);
 
             // Bitmapにピクセルデータを書き込み
@@ -53,16 +58,24 @@ namespace SATOMI.Pages
             bitmap.SetPixels(pixels, 0, width, 0, 0, width, height);
             return bitmap;
         }
-        private static ImageSource ConvertBitmapToImageSource(Android.Graphics.Bitmap bitmap)
+        private static ImageSource? ConvertBitmapToImageSource(Android.Graphics.Bitmap bitmap)
         {
             using (var stream = new MemoryStream())
             {
-                bitmap.Compress(Android.Graphics.Bitmap.CompressFormat.Png, 100, stream);
-                stream.Seek(0, SeekOrigin.Begin);
-                MemoryStream copyStream = new();
-                stream.CopyToAsync(copyStream);
-                copyStream.Position = 0;
-                return ImageSource.FromStream(() => new MemoryStream(copyStream.ToArray())); // <=== Include a new MemoryStream
+                var bmpformat = Android.Graphics.Bitmap.CompressFormat.Png;
+                if (bmpformat == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    bitmap.Compress(bmpformat, 100, stream);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    MemoryStream copyStream = new();
+                    stream.CopyToAsync(copyStream);
+                    copyStream.Position = 0;
+                    return ImageSource.FromStream(() => new MemoryStream(copyStream.ToArray())); // <=== Include a new MemoryStream
+                }
             }
         }
 #endif
@@ -78,30 +91,19 @@ namespace SATOMI.Pages
             // 8bitデータをBitmapに変換
 #if ANDROID
             var bitmap = ConvertToBitmap(pixeldata, 512, 512);
-
-            // BitmapをIImageに変換
             float scale = 1.0F;
-            var scaled_bitmap = ScaleBitmap(bitmap, scale);
-            return ConvertBitmapToImageSource(scaled_bitmap);
-#endif
+            if(bitmap==null)
+            {
+                return null;
+            }
+            else
+            {
+                var scaled_bitmap = ScaleBitmap(bitmap, scale);
+                return ConvertBitmapToImageSource(scaled_bitmap);
+            }
+#else
             return null;
-            //using var bitmap = new SKBitmap(width, height, SKColorType.Gray8, SKAlphaType.Opaque);
-
-            //unsafe
-            //{
-            //    fixed (byte* pixelPtr = pixeldata)
-            //    {
-            //        bitmap.InstallPixels(bitmap.Info, (IntPtr)pixelPtr, width);
-            //    }
-            //}
-
-            //using var image = SKImage.FromBitmap(bitmap);
-            //using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-
-            //// PNG をメモリストリームに保存
-            //using var memoryStream = new MemoryStream(data.ToArray());
-            //memoryStream.Seek(0, SeekOrigin.Begin);
-            //return ImageSource.FromStream(() => memoryStream);
+#endif
         }
     }
 }

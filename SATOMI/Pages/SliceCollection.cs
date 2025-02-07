@@ -65,13 +65,16 @@ namespace SATOMI.Pages
             else
             {
                 // fileLoc がルートディレクトリの場合の処理
-                // 必要に応じて適切な処理を行ってください
+                
             }
             // 権限確認
             bool isPermissionGranted = await CheckAndRequestStoragePermissionAsync();
             if (!isPermissionGranted)
             {
-                Console.WriteLine("ストレージ管理権限が拒否されました。処理を中断します。");
+                //await MainThread.InvokeOnMainThreadAsync(static async () =>
+                //{
+                //    await Application.Current.MainPage.DisplayAlert("Permission error", "Storage management permission denied. Cancels processing.", "OK");
+                //});
                 return;
             }
             _actualFrameNo = 0;
@@ -103,8 +106,6 @@ namespace SATOMI.Pages
             UI.ProgressView.PText = $"Image: {val}/{total}";
             UI.ProgressView.PFloat = prog;
         }
-
-        // プログレス更新メソッド
         void UpdateProgressSafe()
         {
             int current = Interlocked.Increment(ref _current);
@@ -114,8 +115,7 @@ namespace SATOMI.Pages
             }
         }
         private bool _infoModelUpdated = false;
-        private int _actualFrameNo = 0; // Folder mode 
-        private bool use_cash = false;
+        private int _actualFrameNo = 0;
         private void _fromFile(string fileLoc, bool onlyFile = true)
         {
             try
@@ -141,13 +141,9 @@ namespace SATOMI.Pages
 
                 for (int i = 0; i < _imgs.NumberOfFrames; i++)
                 {
-                    var swTotal = new System.Diagnostics.Stopwatch();
-                    swTotal.Start();
                     var byteBuffer = pixData.GetFrame(i);
                     var ushortArray = new ushort[byteBuffer.Size / 2];
                     Buffer.BlockCopy(byteBuffer.Data, 0, ushortArray, 0, byteBuffer.Data.Length);
-                    var swSlices = new System.Diagnostics.Stopwatch();
-                    swSlices.Start();
                     lock (Slices)
                     {
                         Slices.Add(new Slice(
@@ -160,12 +156,6 @@ namespace SATOMI.Pages
                             ushortArray // メモリ内のJPEGデータを使う    
                         ));
                     }
-                    swSlices.Stop();
-                    Console.WriteLine($"Adding to Frames took: {swSlices.ElapsedMilliseconds} ms");
-                    swTotal.Stop();
-                    Console.WriteLine("■_fromFile 全体の時間");
-                    Console.WriteLine($"Total elapsed time: {swTotal.ElapsedMilliseconds} ms");
-                    Console.WriteLine($"Total elapsed time: {swTotal.Elapsed.Hours} hours {swTotal.Elapsed.Minutes} minutes {swTotal.Elapsed.Seconds} seconds {swTotal.ElapsedMilliseconds} milliseconds");
                 }
                 UpdateProgressSafe();
             }
@@ -190,8 +180,6 @@ namespace SATOMI.Pages
             _progessModelReset();
             _total = files.Count;
             _infoModelUpdated = false;
-
-            // Assign 'Roots'
             UI.ClearRoots();
             HashSet<string> parentDirs = new HashSet<string>();
             foreach (string file in files)
@@ -219,15 +207,9 @@ namespace SATOMI.Pages
                     _actualFrameNo = 0;
                     prevDir = dir;
                 }
-
-                // インデックスを渡す
                 tasks.Add(Task.Run(() => _fromFile(file, false)));
             }
-
-            // 全てのタスクが完了するまで待機
             await Task.WhenAll(tasks);  // awaitを追加してタスクが完了するのを待つ
-
-            // タスク完了後にFramesをソート
             Slices = Slices
                 .OrderBy(f => f.IMG_Patient_Position.Length > 2 ? f.IMG_Patient_Position[2] : 0)
                 .Select((frame, index) =>
@@ -235,12 +217,9 @@ namespace SATOMI.Pages
                     frame.Number = index; // ソート後のインデックスをNumberにセット
                     return frame;
                 }).ToList();
-            // 完了後にUI更新処理
             List<string> lastParentFolderNameOnly = new List<string>();
             foreach (var _root in UI.ImageRoots)
                 UI.RootList.Add(_root.DisplayString);
-
-            //return Task.CompletedTask;  // Task.CompletedTaskを返す
         }
     }
 }

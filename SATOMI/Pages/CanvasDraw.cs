@@ -34,13 +34,20 @@ namespace SATOMI.Pages
             if (!ViewerPage.CanDraw) return;
             if (UI.ImageInfo._current_img == null)
             {
-                ushort[] data = ViewerPage.GetCurrentSliceOfPixeldata();
+                ushort[]? data = ViewerPage.GetCurrentSliceOfPixeldata();
                 if (data == null)
                     return;
                 var image_8bit = Convert16BitTo8Bit(data, UI.ImageInfo.current_img_width, UI.ImageInfo.current_img_height, UI.ImageInfo.WW, UI.ImageInfo.WL);
 #if ANDROID
                 var bitmap = ConvertToBitmap(image_8bit,  UI.ImageInfo.current_img_width,  UI.ImageInfo.current_img_height);
-                UI.ImageInfo._current_img = ConvertBitmapToIImage(bitmap);
+                if (bitmap == null)
+                {
+                    UI.ImageInfo._current_img = null;
+                }
+                else
+                {
+                    UI.ImageInfo._current_img = ConvertBitmapToIImage(bitmap);
+                }
 #endif
             }
             canvas.DrawImage(UI.ImageInfo._current_img, (float)ViewerPage._offsetX, (float)ViewerPage._offsetY, ViewerPage.DesiredWidth, ViewerPage.DesiredHeight);
@@ -53,11 +60,15 @@ namespace SATOMI.Pages
 
             return Android.Graphics.Bitmap.CreateScaledBitmap(bitmap, scaledWidth, scaledHeight, true);
         }
-        private static Android.Graphics.Bitmap ConvertToBitmap(byte[] pixelData, int width, int height)
+        private static Android.Graphics.Bitmap? ConvertToBitmap(byte[] pixelData, int width, int height)
         {
             // Bitmapを作成
-            var bitmap = Android.Graphics.Bitmap.CreateBitmap(width, height, Android.Graphics.Bitmap.Config.Argb8888);
-            //var bitmap = Android.Graphics.Bitmap.CreateBitmap(width, height, Android.Graphics.Bitmap.Config.Rgb565);
+            var bmp_conf = Android.Graphics.Bitmap.Config.Argb8888;
+            if (bmp_conf == null)
+            {
+                return null;
+            }
+            var bitmap = Android.Graphics.Bitmap.CreateBitmap(width, height, bmp_conf);
 
             // Bitmapにピクセルデータを書き込み
             int[] pixels = new int[width * height];
@@ -71,13 +82,21 @@ namespace SATOMI.Pages
             bitmap.SetPixels(pixels, 0, width, 0, 0, width, height);
             return bitmap;
         }
-        private static Microsoft.Maui.Graphics.IImage ConvertBitmapToIImage(Android.Graphics.Bitmap bitmap)
+        private static Microsoft.Maui.Graphics.IImage? ConvertBitmapToIImage(Android.Graphics.Bitmap bitmap)
         {
             using (var stream = new MemoryStream())
             {
-                bitmap.Compress(Android.Graphics.Bitmap.CompressFormat.Png, 100, stream);
-                stream.Seek(0, SeekOrigin.Begin);
-                return PlatformImage.FromStream(stream);
+                var bmpformat = Android.Graphics.Bitmap.CompressFormat.Png;
+                if (bmpformat == null)
+                {
+                    return null;
+                }
+                else
+                { 
+                    bitmap.Compress(bmpformat, 100, stream);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    return PlatformImage.FromStream(stream);
+                }
             }
         }
 

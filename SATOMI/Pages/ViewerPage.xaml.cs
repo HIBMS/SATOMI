@@ -37,11 +37,6 @@ namespace SATOMI.Pages
         private static int _totalSlices = -1;
         private static int _currentSlice = -1;
 
-        //public static int current_img_width = 0;
-        //public static int current_img_height = 0;
-        private double _WW = 400.0;
-        
-
         public static float DesiredWidth = 0.0f;
         public static float DesiredHeight = 0.0f;
         public static double _offsetX = 0.0f;
@@ -142,7 +137,7 @@ namespace SATOMI.Pages
         private async Task _loadUI()
         {
             // Dispatchを使ってメインスレッドで処理を行う
-            await Dispatcher.DispatchAsync(async () =>
+            await Dispatcher.DispatchAsync(() =>
             {
                 //BtnFocusPicker.IsVisible = UI.ImageRoots.Count > 1;
 
@@ -216,11 +211,8 @@ namespace SATOMI.Pages
                 var mainDisplayInfo = DeviceDisplay.MainDisplayInfo;
                 GFX.HeightRequest = mainDisplayInfo.Height / mainDisplayInfo.Density;
                 GFX.Invalidate();
-
             }
         }
-
-        public ImageSource _imgs;
         public static double _currentScale = 1;
         private bool isPinchInProgress = false;
         private double _startX;
@@ -284,8 +276,8 @@ namespace SATOMI.Pages
 
                 if (touchPosition != null && GFX != null)
                 {
-                    double bottomAreaHeight = GridBottom.Height + 50;
-                    double topAreaHeight = GridHeader.Height + 50;
+                    double bottomAreaHeight = GridBottom.Height + 150;
+                    double topAreaHeight = GridHeader.Height + 150;
                     // 下部タッチでスライダーを表示
                     // 上部タッチエリアの場合
                     double touchY = touchPosition.Value.Y;
@@ -319,7 +311,7 @@ namespace SATOMI.Pages
             }
         }
         private void OnPanUpdated(object sender, PanUpdatedEventArgs e)
-        {
+        { 
             GridHeader.IsVisible = false;
             GridBottom.IsVisible = false;
             if (isPinchInProgress) return;
