@@ -1,4 +1,33 @@
-﻿using FellowOakDicom.Imaging;
+﻿/*
+ * SliceCollection.cs
+ * 
+ * This class manages a collection of DICOM image slices.
+ * It handles reading DICOM files, extracting metadata, and organizing slices for display.
+ * 
+ * Features:
+ * - Reads DICOM images using FellowOakDicom.
+ * - Extracts metadata such as patient info, study details, and window width/level.
+ * - Handles permission requests on Android for file access.
+ * - Supports loading single or multiple DICOM files in parallel.
+ * - Orders slices based on the Z-axis (ImagePositionPatient).
+ * - Tracks and updates loading progress.
+ * 
+ * Properties:
+ * - `Slices`: List of `Slice` objects representing image slices.
+ * - `WW`, `WL`: Window width and level for image contrast adjustment.
+ * - `_total`, `_current`: Tracking variables for progress updates.
+ * 
+ * Methods:
+ * - `FromFile(string fileLoc)`: Loads a single DICOM file.
+ * - `FromFiles(List<string> files)`: Loads multiple DICOM files asynchronously.
+ * - `CheckAndRequestStoragePermissionAsync()`: Ensures necessary file permissions on Android.
+ * - `_fromFile(string fileLoc, bool onlyFile)`: Internal method to process a DICOM file.
+ * - `_infoModelUpdate(DicomTags tags)`: Updates UI with patient and study details.
+ * - `_progessModelUpdate(int val, int total)`: Updates UI progress indicators.
+ * 
+ * Author: s.harada@HIBMS
+ */
+using FellowOakDicom.Imaging;
 using FellowOakDicom;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
@@ -15,8 +44,6 @@ namespace SATOMI.Pages
     public class SliceCollection
     {
         public List<Slice> Slices = new List<Slice>();
-
-        // Progress counters
         private int _total = 0;
         private int _current = 0;
         public double WW = 0;
@@ -26,7 +53,6 @@ namespace SATOMI.Pages
             Slices = new List<Slice>();
         }
 
-        // 権限確認とリクエスト
         private async Task<bool> CheckAndRequestStoragePermissionAsync()
         {
             if (DeviceInfo.Current.Platform == DevicePlatform.Android)
@@ -44,17 +70,12 @@ namespace SATOMI.Pages
 
                 return status_write == PermissionStatus.Granted && status_read == PermissionStatus.Granted;
             }
-
-            // Android以外のプラットフォームでは許可不要と仮定
             return true;
         }
-        // With Check Permission
         public async Task FromFile(string fileLoc)
         {
             _progessModelReset();
             _infoModelUpdated = false;
-
-            // Roots View Model
             UI.ClearRoots();
             DirectoryInfo? parentDirInfo = Directory.GetParent(fileLoc);
             if (parentDirInfo != null)
@@ -64,17 +85,10 @@ namespace SATOMI.Pages
             }
             else
             {
-                // fileLoc がルートディレクトリの場合の処理
-                
             }
-            // 権限確認
             bool isPermissionGranted = await CheckAndRequestStoragePermissionAsync();
             if (!isPermissionGranted)
             {
-                //await MainThread.InvokeOnMainThreadAsync(static async () =>
-                //{
-                //    await Application.Current.MainPage.DisplayAlert("Permission error", "Storage management permission denied. Cancels processing.", "OK");
-                //});
                 return;
             }
             _actualFrameNo = 0;
@@ -109,7 +123,7 @@ namespace SATOMI.Pages
         void UpdateProgressSafe()
         {
             int current = Interlocked.Increment(ref _current);
-            if (current <= _total) // 進捗が超えないように制御
+            if (current <= _total) 
             {
                 _progessModelUpdate(current, _total);
             }
@@ -122,8 +136,8 @@ namespace SATOMI.Pages
             {
                 DicomImage _imgs = new DicomImage(fileLoc);
                 DicomFile file = DicomFile.Open(fileLoc);
-                DicomDataset dataset = file.Dataset;  // DicomDatasetを取得
-                DicomTags tags = new DicomTags(dataset);  // DicomTagsクラスにDatasetを渡す
+                DicomDataset dataset = file.Dataset; 
+                DicomTags tags = new DicomTags(dataset);  
                 float[] imgPositionPatient = dataset.GetValues<float>(DicomTag.ImagePositionPatient).ToArray();
                 WW = tags.WW;
                 WL = tags.WL;
@@ -153,7 +167,7 @@ namespace SATOMI.Pages
                             _imgs.Width,
                             _imgs.Height,       
                             imgPositionPatient,
-                            ushortArray // メモリ内のJPEGデータを使う    
+                            ushortArray   
                         ));
                     }
                 }
@@ -163,7 +177,6 @@ namespace SATOMI.Pages
             {
                 if (onlyFile)
                 {
-                    // Remove from roots
                     int idxToRemove = UI.ImageRoots.FindIndex(root => root.FilePath == fileLoc);
                     if (idxToRemove != -1)
                         UI.ImageRoots.RemoveAt(idxToRemove);
@@ -175,7 +188,7 @@ namespace SATOMI.Pages
             }
         }
 
-        public async Task FromFiles(List<string> files)  // メソッドを非同期にするために`async`を追加
+        public async Task FromFiles(List<string> files)  
         {
             _progessModelReset();
             _total = files.Count;
@@ -209,12 +222,12 @@ namespace SATOMI.Pages
                 }
                 tasks.Add(Task.Run(() => _fromFile(file, false)));
             }
-            await Task.WhenAll(tasks);  // awaitを追加してタスクが完了するのを待つ
+            await Task.WhenAll(tasks); 
             Slices = Slices
                 .OrderBy(f => f.IMG_Patient_Position.Length > 2 ? f.IMG_Patient_Position[2] : 0)
                 .Select((frame, index) =>
                 {
-                    frame.Number = index; // ソート後のインデックスをNumberにセット
+                    frame.Number = index; 
                     return frame;
                 }).ToList();
             List<string> lastParentFolderNameOnly = new List<string>();

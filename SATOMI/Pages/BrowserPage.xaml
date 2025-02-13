@@ -18,22 +18,15 @@
                         <ViewCell>
                             <SwipeView x:DataType="local:FileFolderView" >
                                 <SwipeView.RightItems>
-                                    <!--<SwipeItems Mode="Execute">
-                                        <SwipeItemView  Command="{Binding OnSwipeOpen}"  CommandParameter="{Binding Location}">
-                                            <StackLayout  BackgroundColor="{Binding SwipeColor}" HorizontalOptions="FillAndExpand" >
-                                                <Label Margin="0,10,0,0" Text="{Binding SwipeText}" TextColor="White" HorizontalTextAlignment="Center"  FontAttributes="Bold" />
-                                            </StackLayout>
-                                        </SwipeItemView>
-                                    </SwipeItems>-->
-                                    <SwipeItems Mode="Execute" >
+                                    <SwipeItems Mode="Execute">
                                         <SwipeItem x:Name="SwipeItemOpen" 
-                                                   Text="{Binding SwipeText}" BackgroundColor="{Binding SwipeColor}"
+                                                   BackgroundColor="{Binding SwipeColor}"
                                                    Invoked="OnSwipeOpen" 
                                                    CommandParameter="{Binding Location}"/>
                                     </SwipeItems>
                                 </SwipeView.RightItems>
                                 <Grid Padding="5,10" ColumnDefinitions="Auto,*">
-                                    <StackLayout Grid.Column="1" Padding="10,0,0,0" VerticalOptions="Center">
+                                    <StackLayout Grid.Column="0" Padding="10,0,0,0" VerticalOptions="Center">
                                         <Label Text="{Binding Name}" TextColor="White" FontSize="Medium"/>
                                     </StackLayout>
                                     <Grid.GestureRecognizers>

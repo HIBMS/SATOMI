@@ -1,4 +1,17 @@
-﻿using System;
+﻿/*
+ * BrowserUI.cs
+ * 
+ * This file defines a simple file browser UI model using C# and ObservableCollection.
+ * It includes:
+ * - `BrowserUI`: A static class holding a directory list model.
+ * - `DirListModel`: A model representing a collection of file and folder views.
+ * - `FileFolderView`: A class representing a file or folder with properties such as location, selection status, swipe actions, and child presence detection.
+ * 
+ * The implementation supports folder navigation, swipe actions based on the presence of child directories, and basic UI properties.
+ * 
+ * Author: s.harada@HIBMS
+ */
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -18,13 +31,12 @@ namespace SATOMI.Pages
     public class FileFolderView
     {
         public string Location { get; }
-        public string SwipeText { get; }
+        //public string SwipeText { get; }
         public Color SwipeColor { get; }
         public bool IsSelected { get; set; }
         public bool IsFolder { get; }
         public bool IsParent { get; }
         public string Name => IsParent ? "..（Return to parent folder）" : Path.GetFileName(Location);
-        public string Icon => IsParent ? "up_folder_icon.png" : (IsSelected ? "selected_folder_icon.png" : "folder_icon.png");
         public bool HasChildren { get; }
         public bool CanSwipe { get; }
         public bool Backbtn { get; }
@@ -40,7 +52,7 @@ namespace SATOMI.Pages
             {
                 Backbtn = true;
                 CanSwipe = false;
-                SwipeText = "     cannot perform a swipe action.";
+                //SwipeText = "     cannot perform a swipe action.";
                 SwipeColor = Colors.Gray;
             }
             else
@@ -56,21 +68,21 @@ namespace SATOMI.Pages
                                                             !d.Contains(".thumbnails"))
                                                             .Any();
                         CanSwipe = HasChildren;
-                        SwipeText = HasChildren ? "     open directory" : "     not found child directory";
+                        //SwipeText = HasChildren ? "     open directory" : "     not found child directory";
                         SwipeColor = HasChildren ? Colors.DarkBlue : Colors.Gray;
                     }
                     catch (Exception)
                     {
                         HasChildren = false;
                         CanSwipe = false;
-                        SwipeText = "     cannot perform a swipe action.";
+                        //SwipeText = "     cannot perform a swipe action.";
                         SwipeColor = Colors.Gray;
                     }
                 }
                 else
                 {
                     HasChildren = false;
-                    SwipeText = "     cannot perform a swipe action.";
+                    //SwipeText = "     cannot perform a swipe action.";
                     SwipeColor = Colors.Gray;
                 }
             }

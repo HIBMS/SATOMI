@@ -1,4 +1,25 @@
-﻿using SATOMI.Pages;
+﻿/*
+ * Slice.cs
+ * 
+ * This class represents a single DICOM image slice in a medical imaging study.
+ * 
+ * Features:
+ * - Stores metadata extracted from the DICOM file.
+ * - Holds pixel data and image dimensions.
+ * - Keeps track of the slice position in a 3D volume.
+ * 
+ * Properties:
+ * - `DicomLoc`: Path to the original DICOM file.
+ * - `OriginalDirectory`: Directory containing the DICOM file.
+ * - `Info`: DICOM metadata extracted into a `DicomTags` object.
+ * - `Number`: Slice index in the series.
+ * - `Width`, `Height`: Image dimensions.
+ * - `IMG_Patient_Position`: Position of the slice in 3D space.
+ * - `Pixeldata`: Raw 16-bit pixel data (optional).
+ * 
+ * Author: s.harada@HIBMS
+ */
+using SATOMI.Pages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,13 +30,13 @@ namespace SATOMI.Pages
 {
     public class Slice
     {
-        public readonly string DicomLoc; // Original file path
-        public readonly string OriginalDirectory; // Original file directory
+        public readonly string DicomLoc;
+        public readonly string OriginalDirectory; 
         public readonly DicomTags Info;
         public readonly int Width, Height;
         public readonly float[] IMG_Patient_Position;
-        public ushort[]? Pixeldata { get; } // `null` の可能性があるため `?` を追加
-        public int Number { get; set; } // `readonly` を削除
+        public ushort[]? Pixeldata { get; } 
+        public int Number { get; set; } 
 
         public Slice(
             string originalLoc,

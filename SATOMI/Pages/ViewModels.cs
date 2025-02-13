@@ -1,4 +1,21 @@
-﻿using System;
+﻿/*
+ * UI.cs
+ * 
+ * Description:
+ * This file defines UI-related models and structures for a DICOM Viewer application.
+ * It includes data models for handling image information, DICOM metadata, and progress tracking.
+ * Additionally, it manages root directories for image storage and provides utility functions.
+ * 
+ * Features:
+ * - ImageInfoModel: Stores current DICOM image and windowing parameters (WW/WL)
+ * - DicomInfoModel: Stores patient and study metadata with property change notifications
+ * - ProgressModel: Tracks loading progress with text and percentage updates
+ * - ImageRoot: Represents root folders and file paths for DICOM images
+ * - UI (static class): Provides global access to UI-related models and methods
+ * 
+ * Author: s.harada@HIBMS
+ */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -39,7 +56,7 @@ namespace SATOMI.Pages
                 if (_WW != value)
                 {
                     _WW = value;
-                    OnPropertyChanged(nameof(WW));  // プロパティが変更されたことを通知
+                    OnPropertyChanged(nameof(WW)); 
                 }
             }
         }
@@ -52,7 +69,7 @@ namespace SATOMI.Pages
                 if (_WL != value)
                 {
                     _WL = value;
-                    OnPropertyChanged(nameof(WL));  // プロパティが変更されたことを通知
+                    OnPropertyChanged(nameof(WL)); 
                 }
             }
         }
@@ -171,10 +188,10 @@ namespace SATOMI.Pages
 
     public class ImageRoot
     {
-        public readonly string RootFolder; // Folder
-        public readonly string FullFolderPath; // /storage/0/emulated/Folder
-        public readonly string FilePath; // /storage/0/emulated/Folder/dicom.dcm
-        public readonly string DisplayString; // what shows in picker
+        public readonly string RootFolder;
+        public readonly string FullFolderPath;
+        public readonly string FilePath; 
+        public readonly string DisplayString; 
         public bool IsFolder => FilePath == string.Empty;
 
         public ImageRoot(string fullFolderPath, string filePath, string displayString)
@@ -188,8 +205,7 @@ namespace SATOMI.Pages
             }
             else
             {
-                // 例として"File"としていますが、適切な処理を行ってください
-                RootFolder = "File"; 
+                RootFolder = ""; 
             }
         }
     }

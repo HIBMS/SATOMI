@@ -1,4 +1,21 @@
-﻿using SixLabors.ImageSharp.PixelFormats;
+﻿/*
+ * CanvasDraw.cs
+ * 
+ * This file defines a custom drawable class for rendering medical images using 16-bit grayscale pixel data.
+ * 
+ * Features:
+ * - `Convert16BitTo8Bit(ushort[], int, int, double, double)`: Converts 16-bit pixel data to 8-bit grayscale.
+ * - `Draw(ICanvas, RectF)`: Draws the processed image onto the canvas.
+ * - Android-specific functions:
+ *   - `ConvertToBitmap(byte[], int, int)`: Converts 8-bit grayscale data to an Android Bitmap.
+ *   - `ScaleBitmap(Bitmap, float)`: Scales an Android Bitmap.
+ *   - `ConvertBitmapToIImage(Bitmap)`: Converts an Android Bitmap to a MAUI-compatible image.
+ * 
+ * This implementation ensures efficient image rendering by utilizing parallel processing and platform-specific optimizations.
+ *
+ * Author: s.harada@HIBMS
+ */
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using System;
 using System.Collections.Generic;
@@ -62,17 +79,13 @@ namespace SATOMI.Pages
         }
         private static Android.Graphics.Bitmap? ConvertToBitmap(byte[] pixelData, int width, int height)
         {
-            // Bitmapを作成
             var bmp_conf = Android.Graphics.Bitmap.Config.Argb8888;
             if (bmp_conf == null)
             {
                 return null;
             }
             var bitmap = Android.Graphics.Bitmap.CreateBitmap(width, height, bmp_conf);
-
-            // Bitmapにピクセルデータを書き込み
             int[] pixels = new int[width * height];
-            // Parallel.For を使って並列処理
             Parallel.For(0, pixelData.Length, i =>
             {
                 int gray = pixelData[i];

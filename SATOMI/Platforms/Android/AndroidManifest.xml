@@ -4,7 +4,7 @@
           android:versionCode="001" 
           android:versionName="developer"
           >
-<application android:hardwareAccelerated="true" android:allowBackup="true" android:icon="@mipmap/appicon" android:supportsRtl="true" android:label="SmartDICOMViewer">
+<application android:hardwareAccelerated="true" android:allowBackup="true" android:icon="@mipmap/appicon" android:supportsRtl="true" android:label="SmartDICOMViewer" android:extractNativeLibs="true">
   <activity android:name="MainActivity"
     android:screenOrientation="portrait">
   </activity>
