@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using epj.ProgressBar.Maui;
+﻿// This code sets up the MauiProgram class to configure and build a Microsoft MAUI application.
+// It registers the app's main entry point (App), configures fonts, adds a custom handler for ProgressBar,
+// and enables logging in debug mode.
+using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls.PlatformConfiguration;
 using Microsoft.Maui;
 

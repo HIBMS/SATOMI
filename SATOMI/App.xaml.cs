@@ -1,4 +1,9 @@
-﻿#if ANDROID
+﻿// This code is part of a Microsoft.Maui application that handles external storage management
+// permission requests on Android. The app checks if the necessary permissions are granted 
+// to manage external storage, particularly for Android 13 and higher, where a specific 
+// permission screen is required for managing storage access. The permission request process 
+// ensures that the app can access and modify external storage when granted by the user.
+#if ANDROID
 using Android.Content.PM;
 using Android.App;
 using System.Threading.Tasks;
@@ -20,7 +25,6 @@ namespace SATOMI
         public App()
         {
             InitializeComponent();
-            //MainPage = new AppShell(); // 初期ページとして AppShell を指定
         }
 
         protected override Window CreateWindow(IActivationState? activationState) // NULL 許容を削除

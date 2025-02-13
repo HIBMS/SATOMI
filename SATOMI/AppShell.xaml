@@ -9,7 +9,6 @@
     BackgroundColor="Black"
     Padding="0"
     Title="SATOMI">
-
     <ShellContent
         ContentTemplate="{DataTemplate pages:ViewerPage}"
         Route="ViewerPage"/>
