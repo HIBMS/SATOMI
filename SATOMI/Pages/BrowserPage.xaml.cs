@@ -1,4 +1,20 @@
-﻿using System.Collections.ObjectModel;
+﻿/*
+ * BrowserPage.cs
+ * 
+ * This file defines a directory browser page in a .NET MAUI application.
+ * 
+ * Features:
+ * - `BrowserPage`: A content page that displays a list of files and folders.
+ * - `_loadLstView(string?)`: Loads directories asynchronously and updates the UI.
+ * - `OnSwipeOpen(object, EventArgs)`: Handles swipe actions to select folders.
+ * - `OnItemDoubleTapped(object, EventArgs)`: Navigates to a selected folder or returns to the parent directory.
+ * - `Initialize()`: Initializes the directory view, handling platform-specific storage paths.
+ * 
+ * The implementation supports directory navigation, selection, swipe actions, and error handling for access permissions.
+ *
+ * Author: s.harada@HIBMS
+ */
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
 using System;
@@ -27,8 +43,6 @@ namespace SATOMI.Pages
                 Debug.Write("selectedItem is null");
                 return;
             }
-
-            // 状態を更新
             foreach (var item in BrowserUI.DirListView.Items)
             {
                 if (item.Location == selectedItem.Location)
@@ -36,7 +50,6 @@ namespace SATOMI.Pages
                     item.IsSelected = !item.IsSelected;
                 }
             }
-
             if (selectedItem.IsFolder && selectedItem.HasChildren)
             {
                 await _loadLstView(selectedItem.Location);
@@ -124,7 +137,7 @@ namespace SATOMI.Pages
             }
             finally
             {
-                await Task.Delay(100); // UI スレッドに処理の余裕を与える
+                await Task.Delay(100);
                 _ = MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     LstView.EndRefresh();

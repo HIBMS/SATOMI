@@ -1,3 +1,19 @@
+/*
+ * ViewerPage.cs
+ * 
+ * Description:
+ * This file is part of a DICOM Viewer built with .NET MAUI and FellowOakDicom.
+ * It provides functionality to load, display, and interact with DICOM images.
+ * 
+ * Features:
+ * - Loads DICOM files from a single file or a directory
+ * - Displays image slices with window width/level adjustments
+ * - Supports touch gestures: zoom (pinch), pan (drag), and frame navigation (slider)
+ * - Extracts metadata such as patient and study details
+ * - Utilizes FellowOakDicom for image processing
+ * 
+ * Author: s.harada@HIBMS
+ */
 using System.IO;
 using Microsoft.Maui.Controls;
 using FellowOakDicom;
@@ -49,6 +65,7 @@ namespace SATOMI.Pages
 
         protected override async void OnAppearing()
         {
+
             if (!_servicesRegistered)
             {
                 new DicomSetupBuilder()
@@ -98,8 +115,6 @@ namespace SATOMI.Pages
                 _offsetY = _delta_panY - (_pivotY * (_currentScale - 1));
                 UI.ImageInfo.WW = _slicec.WW;
                 UI.ImageInfo.WL = _slicec.WL;
-                //EntryWindowLevel.Text = UI.ViewInfo.WL.ToString();
-                //EntryWindowWidth.Text = UI.ViewInfo.WW.ToString();
             }
         }
 
@@ -136,11 +151,8 @@ namespace SATOMI.Pages
 
         private async Task _loadUI()
         {
-            // Dispatchを使ってメインスレッドで処理を行う
             await Dispatcher.DispatchAsync(() =>
             {
-                //BtnFocusPicker.IsVisible = UI.ImageRoots.Count > 1;
-
                 if (_slicec.Slices.Count == 0)
                 {
                     CanDraw = false;
@@ -158,7 +170,6 @@ namespace SATOMI.Pages
                 GridHeader.IsVisible = true;
                 CanDraw = true;
                 _drawFrame(0);
-                //GFX.Scale = 1.0;
             });
         }
 
@@ -175,11 +186,8 @@ namespace SATOMI.Pages
             var uiHeight = mainDisplayInfo.Height / mainDisplayInfo.Density;
             DesiredWidth = (float)uiWidth;
             DesiredHeight = (float)uiWidth;
-            //Console.WriteLine(GFX.Width);
-            //GFX.HeightRequest = GFX.Width;
             GFX.WidthRequest = uiWidth;
             GFX.HeightRequest = uiHeight;
-            // Dispatcher.DispatchAsyncを使用してメインスレッドでUI更新
             Dispatcher.DispatchAsync(() =>
             {
                 GFX.HeightRequest = (int)GFX.Width;
@@ -191,8 +199,6 @@ namespace SATOMI.Pages
                 GridHeader.IsVisible = false;
                 GridBottom.IsVisible = false;
                 GridProgBar.IsVisible = true;
-                //GFX.Scale = 1.0;
-                //BtnFocusPicker.IsVisible = false;
             });
         }
 
@@ -205,9 +211,7 @@ namespace SATOMI.Pages
             {
                 _currentSlice = val;
                 LblFrameNo.Text = $"[{_currentSlice + 1}/{_totalSlices}]";
-                //LblCurrentZoom.Text = $"[{_currentFrame + 1}/{_totalFrames}]";
                 _setInfoModel();
-                //DrawImage();
                 var mainDisplayInfo = DeviceDisplay.MainDisplayInfo;
                 GFX.HeightRequest = mainDisplayInfo.Height / mainDisplayInfo.Density;
                 GFX.Invalidate();
@@ -254,7 +258,6 @@ namespace SATOMI.Pages
         }
         private void Entry_Completed(object sender, EventArgs e)
         {
-            //this.textChangedLabel.Text = "User completed entering text";
             UI.ImageInfo._current_img = null;
             UI.ImageInfo.WL =  double.Parse( EntryWindowLevel.Text );
             UI.ImageInfo.WW =  double.Parse( EntryWindowWidth.Text );
@@ -278,8 +281,6 @@ namespace SATOMI.Pages
                 {
                     double bottomAreaHeight = GridBottom.Height + 150;
                     double topAreaHeight = GridHeader.Height + 150;
-                    // 下部タッチでスライダーを表示
-                    // 上部タッチエリアの場合
                     double touchY = touchPosition.Value.Y;
                     if (touchY <= topAreaHeight)
                     {
@@ -289,7 +290,6 @@ namespace SATOMI.Pages
                             GridHeader.IsVisible = true;
                         }
                     }
-                    // 下部タッチエリアの場合
                     else if (touchY >= GFX.Height - bottomAreaHeight)
                     {
                         if (!GridBottom.IsVisible || !GridHeader.IsVisible)
@@ -298,7 +298,6 @@ namespace SATOMI.Pages
                             GridHeader.IsVisible = true;
                         }
                     }
-                    // その他の領域の場合は非表示
                     else
                     {
                         if (GridBottom.IsVisible || GridHeader.IsVisible)
@@ -366,7 +365,7 @@ namespace SATOMI.Pages
         private void SliderFrame_ValueChanged(object sender, ValueChangedEventArgs e)
         {
             if (isPinchInProgress)
-                return; // ピンチ中はスライダー操作を無視
+                return; 
             UI.ImageInfo._current_img = null;
             int val = (int)e.NewValue - 1;
             _drawFrame(val);
@@ -381,9 +380,7 @@ namespace SATOMI.Pages
             }
             catch (Exception ex)
             {
-                // Log the exception, e.g., using Debug or logging library
                 Console.WriteLine($"Error picking file: {ex.Message}");
-                // Optionally, handle or rethrow specific exceptions if needed
             }
 
             return null;
@@ -396,19 +393,6 @@ namespace SATOMI.Pages
             GridHeader.IsVisible = true;
         }
 
-        private void PickerRoot_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            //_rootIdx = PickerRoot.SelectedIndex;
-            //_loadFromRoot();
-            //_setInfoModel();
-            //GFX.Invalidate();
-        }
-
-        private void BtnFocusPicker_Clicked(object sender, EventArgs e)
-        {
-            //if (PickerRoot.Items.Count > 1)
-            //    PickerRoot.Focus();
-        }
         private void _resetInfoModel()
         {
             UI.InfoView.Clear();
@@ -437,7 +421,6 @@ namespace SATOMI.Pages
             }
             UI.InfoView.PatientInfo = _slicec.Slices[actualFrameIdx].Info.PatientDetails;
             UI.InfoView.StudyInfo = _slicec.Slices[actualFrameIdx].Info.StudyDetails;
-
         }
 
         public static ushort[]? GetCurrentSliceOfPixeldata()
