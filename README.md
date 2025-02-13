@@ -12,9 +12,9 @@ SATOMI is a lightweight and intuitive DICOM image viewer designed for mobile dev
 - **Modality Support**: Currently supports CT (Computed Tomography) images.
   
 ## Installation
-### iOS (TestFlight)
+### iOS
 *Installation instructions are currently being adjusted.*
-### Android (Google Play Beta)
+### Android
 *Installation instructions are currently being adjusted.*
 
 ## Usage
