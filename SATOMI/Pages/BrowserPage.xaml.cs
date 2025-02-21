@@ -22,6 +22,7 @@ using System.Windows.Input;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace SATOMI.Pages
 {
@@ -133,6 +134,7 @@ namespace SATOMI.Pages
                 await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
                     await DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
+                    await Shell.Current.GoToAsync($"//ViewerPage?Location={""}");
                 });
             }
             finally

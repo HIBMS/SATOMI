@@ -155,7 +155,7 @@ namespace SATOMI.Pages
         {
             await Dispatcher.DispatchAsync(() =>
             {
-                _resetInfoModel();
+                _resetcanvas();
                 if (_slicec.Slices.Count == 0)
                 {
                     CanDraw = false;
@@ -396,17 +396,26 @@ namespace SATOMI.Pages
             GridHeader.IsVisible = true;
         }
 
-        private void _resetInfoModel()
+        private void _resetcanvas()
         {
             UI.ImageInfo._current_img = null;
             UI.InfoView.Clear();
+            _delta_panX = 0;
+            _delta_panY = 0;
+            _pivotX = 0;
+            _pivotY = 0;
+            _startX = 0;
+            _startY = 0;
+            _offsetX = 0;
+            _offsetY = 0;
+            _currentScale = 1;
         }
 
         private void _setInfoModel()
         {
             if (_totalSlices <= 0 || _currentSlice < -1 || _currentSlice >= _totalSlices || _rootIdx < 0)
             {
-                _resetInfoModel();
+                _resetcanvas();
                 return;
             }
 
@@ -415,7 +424,7 @@ namespace SATOMI.Pages
 
             if (actualFrameIdx >= _slicec.Slices.Count)
             {
-                _resetInfoModel();
+                _resetcanvas();
                 return;
             }
             if (actualFrameIdx == -1)
