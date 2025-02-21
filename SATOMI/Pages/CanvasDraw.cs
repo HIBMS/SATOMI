@@ -32,7 +32,7 @@ namespace SATOMI.Pages
 {
     internal class CanvasDraw : IDrawable
     {
-        private static byte[] Convert16BitTo8Bit(ushort[] pixelData, int width, int height, double windowWidth, double windowCenter)
+        private static byte[] Convert16BitTo8Bit(ushort[] pixelData, int width, int height, float slope, float intercept, double windowWidth, double windowCenter)
         {
             var output = new byte[width * height];
             int min = (int)(windowCenter - (windowWidth / 2));
@@ -40,7 +40,8 @@ namespace SATOMI.Pages
 
             Parallel.For(0, pixelData.Length, i =>
             {
-                int value = ((short)pixelData[i] - min) * 255 / (max - min);
+                double realValue = ((short)pixelData[i] * slope) + intercept;
+                int value = (int)( (realValue - min) * 255 / (max - min) );
                 output[i] = (byte)((value < 0) ? 0 : (value > 255) ? 255 : value);
             });
 
@@ -54,7 +55,7 @@ namespace SATOMI.Pages
                 ushort[]? data = ViewerPage.GetCurrentSliceOfPixeldata();
                 if (data == null)
                     return;
-                var image_8bit = Convert16BitTo8Bit(data, UI.ImageInfo.current_img_width, UI.ImageInfo.current_img_height, UI.ImageInfo.WW, UI.ImageInfo.WL);
+                var image_8bit = Convert16BitTo8Bit(data, UI.ImageInfo.current_img_width, UI.ImageInfo.current_img_height,UI.ImageInfo.img_slope,UI.ImageInfo.img_intercept, UI.ImageInfo.WW, UI.ImageInfo.WL);
 #if ANDROID
                 var bitmap = ConvertToBitmap(image_8bit,  UI.ImageInfo.current_img_width,  UI.ImageInfo.current_img_height);
                 if (bitmap == null)

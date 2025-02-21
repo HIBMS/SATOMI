@@ -47,6 +47,8 @@ namespace SATOMI.Pages
         public Microsoft.Maui.Graphics.IImage? _current_img = null;
         public int current_img_width;
         public int current_img_height;
+        public float img_slope;
+        public float img_intercept;
         private double _WW = 400.0;
         public double WW
         {

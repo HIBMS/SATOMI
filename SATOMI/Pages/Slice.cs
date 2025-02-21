@@ -35,15 +35,18 @@ namespace SATOMI.Pages
         public readonly DicomTags Info;
         public readonly int Width, Height;
         public readonly float[] IMG_Patient_Position;
+        public readonly float Slope;
+        public readonly float Intercept;
         public ushort[]? Pixeldata { get; } 
-        public int Number { get; set; } 
-
+        public int Number { get; set; }
         public Slice(
             string originalLoc,
             DicomTags info,
             int number,
             int width,
             int height,
+            float slope,
+            float intercept,
             float[] img_patient_position,
             ushort[]? pixeldata = null
         )
@@ -54,6 +57,8 @@ namespace SATOMI.Pages
             Number = number;
             Width = width;
             Height = height;
+            Slope = slope;
+            Intercept = intercept;
             IMG_Patient_Position = img_patient_position;
             Pixeldata = pixeldata;
         }

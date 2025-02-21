@@ -27,6 +27,8 @@ using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;
 using System.Reflection.Metadata;
 using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
+using FellowOakDicom.Network;
+using static SATOMI.Pages.DICOMService;
 
 namespace SATOMI.Pages
 {
@@ -42,8 +44,9 @@ namespace SATOMI.Pages
             GridDicomInfo.BindingContext = UI.InfoView;
             GridHeader.BindingContext = UI.ImageInfo;
             WWWLManager.SelectedIndex = 0;
+            var server = DicomServerFactory.Create<DicomStorageServer>(4649);
         }
-
+       
         public static SliceCollection _slicec = new SliceCollection();
 
         string _location = "";
@@ -65,7 +68,6 @@ namespace SATOMI.Pages
 
         protected override async void OnAppearing()
         {
-
             if (!_servicesRegistered)
             {
                 new DicomSetupBuilder()
@@ -113,8 +115,8 @@ namespace SATOMI.Pages
                 var mainDisplayInfo = DeviceDisplay.MainDisplayInfo;
                 _delta_panY = mainDisplayInfo.Height / mainDisplayInfo.Density * 0.5 - GFX.Height * 0.5 ;
                 _offsetY = _delta_panY - (_pivotY * (_currentScale - 1));
-                UI.ImageInfo.WW = _slicec.WW;
-                UI.ImageInfo.WL = _slicec.WL;
+                UI.ImageInfo.WW = _slicec.defaultWW;
+                UI.ImageInfo.WL = _slicec.defaultWL;
             }
         }
 
@@ -153,6 +155,7 @@ namespace SATOMI.Pages
         {
             await Dispatcher.DispatchAsync(() =>
             {
+                _resetInfoModel();
                 if (_slicec.Slices.Count == 0)
                 {
                     CanDraw = false;
@@ -233,8 +236,8 @@ namespace SATOMI.Pages
             switch(selectedIndex)
             {
                 case 0:
-                    UI.ImageInfo.WW = 400;
-                    UI.ImageInfo.WL = 40;
+                    UI.ImageInfo.WW = _slicec.defaultWW; 
+                    UI.ImageInfo.WL = _slicec.defaultWL; 
                     break;
                 case 1:
                     UI.ImageInfo.WW = 80;
@@ -395,6 +398,7 @@ namespace SATOMI.Pages
 
         private void _resetInfoModel()
         {
+            UI.ImageInfo._current_img = null;
             UI.InfoView.Clear();
         }
 
@@ -441,7 +445,8 @@ namespace SATOMI.Pages
             }
             UI.ImageInfo.current_img_height = _slicec.Slices[actualFrameIdx].Height;
             UI.ImageInfo.current_img_width = _slicec.Slices[actualFrameIdx].Width;
-
+            UI.ImageInfo.img_slope = _slicec.Slices[actualFrameIdx].Slope;
+            UI.ImageInfo.img_intercept = _slicec.Slices[actualFrameIdx].Intercept;
             return _slicec.Slices[actualFrameIdx].Pixeldata;
         }
     }

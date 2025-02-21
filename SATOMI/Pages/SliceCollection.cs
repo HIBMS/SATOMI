@@ -46,8 +46,8 @@ namespace SATOMI.Pages
         public List<Slice> Slices = new List<Slice>();
         private int _total = 0;
         private int _current = 0;
-        public double WW = 0;
-        public double WL = 0;
+        public double defaultWW = 400;
+        public double defaultWL = 40;
         public SliceCollection()
         {
             Slices = new List<Slice>();
@@ -139,9 +139,16 @@ namespace SATOMI.Pages
                 DicomDataset dataset = file.Dataset; 
                 DicomTags tags = new DicomTags(dataset);  
                 float[] imgPositionPatient = dataset.GetValues<float>(DicomTag.ImagePositionPatient).ToArray();
-                WW = tags.WW;
-                WL = tags.WL;
-
+                defaultWW = tags.WW;
+                defaultWL = tags.WL;
+                if (!dataset.TryGetValue(DicomTag.RescaleSlope, 0, out float rescaleSlope))
+                {
+                    rescaleSlope = 1f; 
+                }
+                if (!dataset.TryGetValue(DicomTag.RescaleIntercept, 0, out float rescaleIntercept))
+                {
+                    rescaleIntercept = 0f; 
+                }
                 if (onlyFile)
                     _total = _imgs.NumberOfFrames;
 
@@ -165,7 +172,9 @@ namespace SATOMI.Pages
                             tags,
                             Interlocked.Increment(ref _actualFrameNo),
                             _imgs.Width,
-                            _imgs.Height,       
+                            _imgs.Height,
+                            rescaleSlope,
+                            rescaleIntercept,
                             imgPositionPatient,
                             ushortArray   
                         ));
