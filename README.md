@@ -5,7 +5,7 @@
 SATOMI is a lightweight and intuitive DICOM image viewer designed for mobile devices. It allows user to view and analyze medical images on their smartphones with ease.
 
 ## Features
-- **DICOM File Support**: Load and display DICOM images from local storage.(Cloud services support is not yet available.)
+- **DICOM Storage**: Provides　Storage SCP.
 - **Windowing & Adjustments**: Adjust brightness, contrast, and apply preset windowing modes.
 - **Zoom & Pan**: Intuitive touch gestures for zooming and panning.
 - **Cross-Platform Compatibility**: Available for both iOS and Android.
