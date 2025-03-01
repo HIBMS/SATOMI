@@ -1,3 +1,20 @@
+/*
+ * ApplicationSettingPage.cs
+ * 
+ * Overview:
+ * This file defines the ApplicationSettingPage in a .NET MAUI application.
+ * It manages the DICOM server settings and provides a UI for users to modify settings.
+ * The page allows users to switch between different settings tabs and start/restart the DICOM storage server.
+ * 
+ * Features:
+ * - Load and save DICOM server settings
+ * - Tab switching for different settings sections
+ * - Start and restart the DICOM storage server
+ * - Fade-in animation on page appearance
+ * - UI binding for configuration settings
+ * 
+ * Author: s.harada@HIBMS
+ */
 using FellowOakDicom.Network;
 using System.Net.NetworkInformation;
 using static SATOMI.Pages.DICOMService;

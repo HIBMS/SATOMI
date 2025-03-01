@@ -1,4 +1,20 @@
-﻿using System.ComponentModel;
+﻿/*
+ * ApplicationSettingPage.cs
+ * 
+ * Overview:
+ * This file defines the DICOMServerSettings class in a .NET MAUI application.
+ * It manages the configuration settings for the DICOM server, including the AE Title, Port Number, and Local IP Address.
+ * The class allows users to load, modify, and save settings for the DICOM storage server.
+ * 
+ * Features:
+ * - Retrieve and display the local IP address
+ * - Load and save DICOM server settings (AE Title and Port Number)
+ * - Notify UI of property changes using INotifyPropertyChanged
+ * - Provide default values for DICOM settings
+ * 
+ * Author: s.harada@HIBMS
+ */
+using System.ComponentModel;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 

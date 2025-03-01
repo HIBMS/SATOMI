@@ -1,12 +1,22 @@
 ﻿/*
  * DICOMService.cs
  * 
+ * Overview:
+ * This file defines the DICOMService class, which manages DICOM networking operations within a .NET MAUI application.
+ * It provides implementations for DICOM C-STORE and C-ECHO services.
+ * The service also supports receiving and storing DICOM images locally on Android devices.
  * 
  * Features:
+ * - Implements DICOM storage SCP for receiving and storing DICOM images
+ * - Supports C-STORE,C-ECHO operations
+ * - Handles association requests and releases
+ * - Supports various transfer syntaxes, including compressed formats
  * 
  * Properties:
+ * - StorageServer: Manages the DICOM storage service instance
+ * - Handles DICOM requests and responses for networking operations
  * 
- * When testing Storage-scp on the Android emulator, port forwarding is required. The command is as follows:
+ * When testing Storage-SCP on the Android emulator, port forwarding is required. The command is as follows:
  *   adb forward tcp:[port number] tcp:[port number]
  * The IP address for the Storage SCU is 127.0.0.1 or localhost.
  * 
