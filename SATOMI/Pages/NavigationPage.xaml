@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SATOMI.Pages.NavigationPage"
+             BackgroundColor="Black"
+             >
+    <VerticalStackLayout Padding="30" Spacing="25"
+                     VerticalOptions="Center">
+        <VerticalStackLayout.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="Black" Offset="0" />
+                <GradientStop Color="DarkGray" Offset="1" />
+            </LinearGradientBrush>
+        </VerticalStackLayout.Background>
+
+        <Label Text="SATOMI Menu" 
+           FontSize="28"
+           FontAttributes="Bold"
+           TextColor="White"
+           HorizontalOptions="Center"/>
+        <!-- Image Viewer Button -->
+        <Border StrokeThickness="0" Background="#1AFFFFFF" Padding="12"
+            StrokeShape="RoundRectangle 16">
+            <Button Text="Image Viewer"
+                Clicked="ImageViewer"
+                BackgroundColor="Transparent"
+                TextColor="White"
+                FontSize="20"
+                Padding="15"/>
+        </Border>
+
+        <!-- DICOM Communication Button -->
+        <Border StrokeThickness="0" Background="#1AFFFFFF" Padding="12"
+            StrokeShape="RoundRectangle 16">
+            <Button Text="DICOM Storage"
+                Clicked="PatientList"
+                BackgroundColor="Transparent"
+                TextColor="White"
+                FontSize="20"
+                Padding="15"/>
+        </Border>
+
+        <!-- Import Local Files Button -->
+        <!--<Border StrokeThickness="0" Background="#1AFFFFFF" Padding="12"
+            StrokeShape="RoundRectangle 16">
+            <Button Text="📂Import Local Files"
+                Clicked="ImportLocalFiles"
+                BackgroundColor="Transparent"
+                TextColor="White"
+                FontSize="20"
+                Padding="15"/>
+        </Border>-->
+
+        <!-- Application Settings Button -->
+        <Border StrokeThickness="0" Background="#1AFFFFFF" Padding="12"
+            StrokeShape="RoundRectangle 16">
+            <Button Text="⚙️ Application Settings"
+                Clicked="ApplicationSettings"
+                BackgroundColor="Transparent"
+                TextColor="White"
+                FontSize="20"
+                Padding="15"/>
+        </Border>
+
+    </VerticalStackLayout>
+</ContentPage>

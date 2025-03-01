@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="SATOMI.Pages.ApplicationSettingPage"
+             xmlns:local="clr-namespace:SATOMI.Pages"
+             BackgroundColor="Black">
+    <VerticalStackLayout Padding="20" Spacing="20">
+        <!-- タブボタン -->
+        <Border StrokeThickness="0" Background="#1AFFFFFF" Padding="16" Grid.RowSpan="3" Grid.Row="0" Grid.Column="0"
+                StrokeShape="RoundRectangle 20" Margin="10" >
+            <Button x:Name="NaviBtn" Text="SATOMI Menu" Margin="0"
+                BackgroundColor="Transparent" TextColor="#FFFFFF" 
+                FontSize="16" FontAttributes="Bold"  Clicked="Navigation_Clicked"
+                HorizontalOptions="Fill" VerticalOptions="Fill">
+            </Button>
+        </Border>
+        <HorizontalStackLayout BackgroundColor="#222" Padding="5" >
+            <Button x:Name="Tab1Button" Text="DICOM Server" Clicked="OnTab1Clicked" 
+                    BackgroundColor="Transparent" TextColor="White" FontAttributes="Bold"
+                    BorderColor="White" BorderWidth="2" CornerRadius="10"
+                    Padding="10" HorizontalOptions="Fill"/>
+            <Button x:Name="Tab2Button" Text="Application Settings" Clicked="OnTab2Clicked" 
+                    BackgroundColor="Transparent" TextColor="Gray" FontAttributes="Bold"
+                    BorderColor="Gray" BorderWidth="2" CornerRadius="10"
+                    Padding="10" HorizontalOptions="Fill"/>
+        </HorizontalStackLayout>
+
+        <!-- タブ内容 -->
+        <StackLayout x:Name="DICOMServer" x:DataType="local:DICOMServerSettings" IsVisible="True" Spacing="20" Padding="10" >
+            <Border BackgroundColor="#333"  Padding="10">
+                <HorizontalStackLayout Spacing="10" >
+                    <Label Text="IP Address:" FontSize="16" TextColor="White" VerticalOptions="Center"/>
+                    <Label x:Name="IpAddressLabel" Text="{Binding IpAddress}" FontSize="16" TextColor="White"/>
+                </HorizontalStackLayout>
+            </Border>
+            <Border BackgroundColor="#333"  Padding="10">
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="AE Title:" FontSize="16" TextColor="White" VerticalOptions="Center"/>
+                    <Entry Placeholder="Enter AE Title" Text="{Binding AeTitle}"
+                           TextColor="White" PlaceholderColor="Gray" BackgroundColor="#444"/>
+                </HorizontalStackLayout>
+            </Border>
+            <Border BackgroundColor="#333"  Padding="10">
+                <HorizontalStackLayout Spacing="10">
+                    <Label Text="Port Number:" FontSize="16" TextColor="White" VerticalOptions="Center"/>
+                    <Entry Placeholder="Enter Port Number" Keyboard="Numeric"
+                           Text="{Binding PortNumber}" TextColor="White" PlaceholderColor="Gray" BackgroundColor="#444"/>
+                </HorizontalStackLayout>
+            </Border>
+            <Button Text="Start DICOM Server" Clicked="OnStartServerClicked" 
+                    BackgroundColor="#007AFF" TextColor="White" FontAttributes="Bold"
+                    CornerRadius="10" Padding="15"/>
+        </StackLayout>
+
+        <StackLayout x:Name="ApplicationSettings" IsVisible="False" Padding="10">
+            <Label Text="This is the content for Tab 2" TextColor="White" FontSize="16"/>
+        </StackLayout>
+    </VerticalStackLayout>
+</ContentPage>

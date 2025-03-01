@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SATOMI.Pages.PatientListPage"
+             xmlns:local="clr-namespace:SATOMI.Pages"
+             BackgroundColor="#000000">
+    <VerticalStackLayout>
+        <Grid RowDefinitions="110, *">
+            <!-- GridHeader -->
+            <Grid x:Name="GridHeader" x:DataType="local:PatientListPage" BackgroundColor="Transparent" RowDefinitions="*,*,*" ColumnDefinitions="Auto, *" ColumnSpacing="10" Padding="0" Grid.Row="0">
+                <Border StrokeThickness="0" Background="#1AFFFFFF" Padding="16" Grid.RowSpan="3" Grid.Row="0" Grid.Column="0"
+                    StrokeShape="RoundRectangle 20" Margin="10" HorizontalOptions="End">
+                    <Button x:Name="NaviBtn" Text="SATOMI Menu" Margin="0"
+                        Clicked="Navigation_Clicked" BackgroundColor="Transparent" TextColor="#FFFFFF"
+                        FontSize="16" FontAttributes="Bold" Padding="12,8"
+                        HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
+                    </Button>
+                </Border>
+                <Label Text="{Binding StorageSize, StringFormat='StorageSize: {0} GB'}" FontSize="16" TextColor="Gray" Grid.Row="1" Grid.Column="1"/>
+            </Grid>
+            <ScrollView Grid.Row="1">
+                <CollectionView x:Name="PatientCollectionView" x:DataType="local:PatientListPage" ItemsSource="{Binding PatientList}" VerticalScrollBarVisibility="Default">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Stroke="Black" Padding="5" Margin="10">
+                                <StackLayout x:DataType="local:PatientNode" >
+                                    <Label Text="{Binding PatientID}" FontSize="18" TextColor="White"/>
+                                    <Label Text="{Binding PatientName}" FontSize="20" FontAttributes="Bold" TextColor="White"/>
+                                    <Label Text="{Binding ModalityList}" FontSize="16" TextColor="Gray"/>
+                                    <Label Text="{Binding ImageCount, StringFormat='Images: {0}'}" FontSize="16" TextColor="Gray"/>
+                                    <Button Text="Open" Clicked="OnPatientButtonClicked" BackgroundColor="{StaticResource Primary}"/>
+                                    <Button Text="Delete" Clicked="OnDeletePatientClicked" BackgroundColor="{StaticResource Secondary}" TextColor="{StaticResource SecondaryDarkText}" FontAttributes="Bold" />
+
+                                    <CollectionView ItemsSource="{Binding Images}" IsVisible="{Binding IsImagesVisible}">
+                                        <CollectionView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Stroke="Gray" Padding="10" Margin="5" x:DataType="local:ImageNode"> 
+                                                    <Label Text="{Binding ImageType}" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </CollectionView.ItemTemplate>
+                                    </CollectionView>
+                                </StackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </ScrollView>
+            <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" IsVisible="True" HorizontalOptions="Center" VerticalOptions="Center" Grid.Row="1" />
+        </Grid>
+    </VerticalStackLayout>
+</ContentPage>

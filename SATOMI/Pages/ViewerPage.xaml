@@ -10,13 +10,7 @@
     <ContentPage.Resources>
         <drawables:CanvasDraw x:Key="FrameDraw" />
     </ContentPage.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="110"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="70"/>
-        </Grid.RowDefinitions>
-
+    <Grid RowDefinitions="110, * , 70">
         <GraphicsView x:Name="GFX"
                   Grid.Row="0"
                   Grid.RowSpan="3"
@@ -55,20 +49,26 @@
             </VerticalStackLayout>
         </Grid>
 
-        <Grid x:Name="GridHeader" BackgroundColor="Transparent" RowDefinitions="*,*,*" ColumnDefinitions="*, *, Auto" ColumnSpacing="10" Padding="0" Grid.Row="0">
-            <Button x:Name="BtnImport" ImageSource="ic_plus.png" Text="Select File/Folder" Margin="2"   Grid.RowSpan="2"
-                    Clicked="BtnImport_Clicked" BackgroundColor="{StaticResource Primary}" HorizontalOptions="End" Grid.Row="0" Grid.Column="2"/>
-            <Label Text="Window Level:" TextColor="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="0" Grid.Column="0"/>
+        <Grid x:Name="GridHeader" BackgroundColor="Transparent" RowDefinitions="*,*,*" ColumnDefinitions="Auto, *, *" ColumnSpacing="10" Padding="0" Grid.Row="0">
+            <Border StrokeThickness="0" Background="#1AFFFFFF" Padding="16" Grid.RowSpan="3" Grid.Row="0" Grid.Column="0"
+        StrokeShape="RoundRectangle 20" Margin="10" HorizontalOptions="End">
+                <Button x:Name="NaviBtn" Text="SATOMI Menu" Margin="0"
+                        Clicked="Navigation_Clicked" BackgroundColor="Transparent" TextColor="#FFFFFF" 
+                        FontSize="16" FontAttributes="Bold" 
+                        HorizontalOptions="Fill" VerticalOptions="Fill">
+                </Button>
+            </Border>
+            <Label Text="Window Level:" TextColor="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="0" Grid.Column="1"/>
             <Entry x:Name="EntryWindowLevel" x:DataType="local:ImageInfoModel"
                    Text="{Binding WL}" Keyboard="Numeric" Completed="Entry_Completed"
                    TextColor="{StaticResource Secondary}"  PlaceholderColor="Gray"
-                   FontSize="14" HorizontalTextAlignment="Center" Grid.Row="1" Grid.Column="0" />
-            <Label Text="Window Width:" TextColor="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="0" Grid.Column="1"/>
+                   FontSize="14" HorizontalTextAlignment="Center" Grid.Row="1" Grid.Column="1" />
+            <Label Text="Window Width:" TextColor="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="0" Grid.Column="2"/>
             <Entry x:Name="EntryWindowWidth" x:DataType="local:ImageInfoModel" 
                    Text="{Binding WW}" Keyboard="Numeric" Completed="Entry_Completed"
                    TextColor="{StaticResource Secondary}"  PlaceholderColor="Gray"
-                   FontSize="14" HorizontalTextAlignment="Center" Grid.Row="1" Grid.Column="1"/>
-            <Picker x:Name="WWWLManager" Grid.Column="0" SelectedIndexChanged="OnPickerSelectedIndexChanged" Grid.Row ="2"  Grid.ColumnSpan="2" HorizontalTextAlignment="Center" SelectedIndex="0" TextColor="{StaticResource Secondary}" >
+                   FontSize="14" HorizontalTextAlignment="Center" Grid.Row="1" Grid.Column="2"/>
+            <Picker x:Name="WWWLManager"  SelectedIndexChanged="OnPickerSelectedIndexChanged" Grid.Column="1" Grid.Row ="2"  Grid.ColumnSpan="2" HorizontalTextAlignment="Center" SelectedIndex="0" TextColor="{StaticResource Secondary}" >
                 <Picker.ItemsSource>
                     <x:Array Type="{x:Type x:String}">
                         <x:String>Default</x:String>
@@ -83,11 +83,22 @@
 
         <Grid x:Name="GridBottom" VerticalOptions="End" Grid.Row="2" >
             <VerticalStackLayout Padding="10" Spacing="10">
-                <Grid>
-                    <Label x:Name="LblStartSlider" Text="1" TextColor="White" HorizontalOptions="Start" FontSize="Small"/>
-                    <Label x:Name="LblFrameNo" Text="50" TextColor="DimGray" HorizontalOptions="Center" FontSize="Micro"/>
-                    <Label x:Name="LblEndSlider" Text="100" TextColor="White" HorizontalOptions="End" FontSize="Small"/>
-                    <Slider x:Name="SliderFrame"
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Button x:Name="ReturnSlice" 
+                            Clicked="ReturnSlice_Clicked" 
+                            Pressed="ReturnSlice_Pressed"
+                            Released="ReturnSlice_Released"
+                            Text="☜" Grid.Column="0" Margin="2" />
+                    <Button x:Name="NextSlice" 
+                            Clicked="NextSlice_Clicked"
+                            Pressed="NextSlice_Pressed"
+                            Released="NextSlice_Released"
+                            Text="☞" Grid.Column="2"  Margin="2" />
+
+                    <Label x:Name="LblStartSlider" Text="1" TextColor="White" HorizontalOptions="Start" FontSize="Small" Grid.Column="1"/>
+                    <Label x:Name="LblFrameNo" Text="50" TextColor="DimGray" HorizontalOptions="Center" FontSize="Micro" Grid.Column="1" />
+                    <Label x:Name="LblEndSlider" Text="100" TextColor="White" HorizontalOptions="End" FontSize="Small" Grid.Column="1" />
+                    <Slider x:Name="SliderFrame" Grid.Column="1"
                             Minimum="1"
                             Maximum="100"
                             Value="50"

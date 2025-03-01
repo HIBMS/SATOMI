@@ -15,4 +15,13 @@
     <ShellContent
         ContentTemplate="{DataTemplate pages:BrowserPage}"
         Route="BrowserPage"/>
+    <ShellContent
+        ContentTemplate="{DataTemplate pages:PatientListPage}"
+        Route="PatientListPage"/>
+    <ShellContent
+        ContentTemplate="{DataTemplate pages:NavigationPage}"
+        Route="NavigationPage"/>
+    <ShellContent
+        ContentTemplate="{DataTemplate pages:ApplicationSettingPage}"
+        Route="ApplicationSettingPage"/>
 </Shell>

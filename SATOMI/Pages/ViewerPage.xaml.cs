@@ -44,7 +44,15 @@ namespace SATOMI.Pages
             GridDicomInfo.BindingContext = UI.InfoView;
             GridHeader.BindingContext = UI.ImageInfo;
             WWWLManager.SelectedIndex = 0;
-            var server = DicomServerFactory.Create<DicomStorageServer>(4649);
+            var portNumberString = Preferences.Get("SCPPortNumber", "");  // デフォルト値は空文字
+            //int PortNumber = port;
+            int PortNumber = 4649;
+            if (!string.IsNullOrEmpty(portNumberString) && int.TryParse(portNumberString, out int portset))
+            {
+                PortNumber = portset;
+            }
+            DICOMService.StorageServer = DicomServerFactory.Create<DicomStorageServer>(PortNumber);
+
         }
        
         public static SliceCollection _slicec = new SliceCollection();
@@ -68,6 +76,9 @@ namespace SATOMI.Pages
 
         protected override async void OnAppearing()
         {
+            this.Opacity = 0;
+            _ = this.FadeTo(1, 700, Easing.SinIn);
+
             if (!_servicesRegistered)
             {
                 new DicomSetupBuilder()
@@ -389,13 +400,94 @@ namespace SATOMI.Pages
             return null;
         }
 
-        private async void BtnImport_Clicked(object sender, EventArgs e)
+        private async void Navigation_Clicked(object sender, EventArgs e)
         {
             GridHeader.IsVisible = false;
-            await Shell.Current.GoToAsync("//BrowserPage"); //Define uri in AppShell.xaml
+            var page = new NavigationPage();
+            page.Opacity = 0; 
+            var currentWindow = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault();
+            if (currentWindow?.Page?.Navigation != null)
+            {
+                await currentWindow.Page.Navigation.PushModalAsync(page);
+                await page.FadeTo(1, 700);
+            }
             GridHeader.IsVisible = true;
         }
+        private bool isPressingReturnSlice = false;
+        private bool isPressingNextSlice = false;
+        private bool isButtonPressedDelayed = false;
+        private bool isButtonClicked = false;
+        private double sliderIncrement = 5;  
+        private const int ClickDebounceTime = 500;  
 
+        private async void ReturnSlice_Pressed(object sender, EventArgs e)
+        {
+            if (isButtonPressedDelayed || isButtonClicked) return;
+            isPressingReturnSlice = true;
+            isButtonPressedDelayed = true;
+            await Task.Delay(800); 
+            StartSliderValueChange();
+        }
+        private async void NextSlice_Pressed(object sender, EventArgs e)
+        {
+            if (isButtonPressedDelayed || isButtonClicked) return;
+            isPressingNextSlice = true;
+            isButtonPressedDelayed = true;
+            await Task.Delay(800); 
+            StartSliderValueChange();
+        }
+
+        private void ReturnSlice_Released(object sender, EventArgs e)
+        {
+            isButtonPressedDelayed = false;
+            isPressingReturnSlice = false;
+            if (!isPressingReturnSlice && isButtonClicked)
+            {
+                SliderFrame.Value -= 1;
+            }
+        }
+        private void NextSlice_Released(object sender, EventArgs e)
+        {
+            isButtonPressedDelayed = false;
+            isPressingNextSlice = false;
+            if (!isPressingNextSlice && isButtonClicked)
+            {
+                SliderFrame.Value += 1;
+            }
+        }
+        private void StartSliderValueChange()
+        {
+            Dispatcher.StartTimer(TimeSpan.FromMilliseconds(100), () =>
+            {
+                if (isPressingReturnSlice)
+                {
+                    SliderFrame.Value = Math.Max(SliderFrame.Minimum, SliderFrame.Value - sliderIncrement);
+                }
+                else if (isPressingNextSlice)
+                {
+                    SliderFrame.Value = Math.Min(SliderFrame.Maximum, SliderFrame.Value + sliderIncrement);
+                }
+                return isPressingReturnSlice || isPressingNextSlice; 
+            });
+        }
+
+        private async void ReturnSlice_Clicked(object sender, EventArgs e)
+        {
+            if (isButtonClicked) return;  
+            isButtonClicked = true;
+            SliderFrame.Value -= 1;
+            await Task.Delay(ClickDebounceTime); 
+            isButtonClicked = false; 
+        }
+
+        private async void NextSlice_Clicked(object sender, EventArgs e)
+        {
+            if (isButtonClicked) return;  
+            isButtonClicked = true;
+            SliderFrame.Value += 1;
+            await Task.Delay(ClickDebounceTime); 
+            isButtonClicked = false; 
+        }
         private void _resetcanvas()
         {
             UI.ImageInfo._current_img = null;
