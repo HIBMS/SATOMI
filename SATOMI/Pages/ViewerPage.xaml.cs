@@ -471,21 +471,21 @@ namespace SATOMI.Pages
             });
         }
 
-        private async void ReturnSlice_Clicked(object sender, EventArgs e)
+        private void ReturnSlice_Clicked(object sender, EventArgs e)
         {
             if (isButtonClicked) return;  
             isButtonClicked = true;
             SliderFrame.Value -= 1;
-            await Task.Delay(ClickDebounceTime); 
+            //await Task.Delay(ClickDebounceTime); 
             isButtonClicked = false; 
         }
 
-        private async void NextSlice_Clicked(object sender, EventArgs e)
+        private void NextSlice_Clicked(object sender, EventArgs e)
         {
             if (isButtonClicked) return;  
             isButtonClicked = true;
             SliderFrame.Value += 1;
-            await Task.Delay(ClickDebounceTime); 
+            //await Task.Delay(ClickDebounceTime); 
             isButtonClicked = false; 
         }
         private void _resetcanvas()
