@@ -2,12 +2,18 @@ using FellowOakDicom;
 using FellowOakDicom.Imaging;
 using Microsoft.Maui.Controls.Internals;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Text.Json;
 using System.Threading;
 
 namespace SATOMI.Pages
 {
     public partial class PatientListPage : ContentPage
     {
+        public static bool updated_data = false;
+        private bool firstAppearing = true;
         public ObservableCollection<PatientNode> PatientList { get; set; }
         private double _storageSize;
         public double StorageSize
@@ -46,41 +52,82 @@ namespace SATOMI.Pages
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-
             this.Opacity = 0;
             await this.FadeTo(1, 700, Easing.SinIn);
-            await LoadDicomFilesAsync();
-        }
-
-        protected override void OnNavigatedTo(NavigatedToEventArgs args)
-        {
-            base.OnNavigatedTo(args);
-
-            // ページがロードされた後にサイズを取得
-            this.Loaded += (s, e) =>
+            var appHeight = this.Height;
+            if (!double.IsNaN(appHeight) && appHeight > 0 && firstAppearing ==true) 
             {
-                var appHeight = this.Height;
-
-                // NaN でないかチェックしてから設定
-                if (!double.IsNaN(appHeight) && appHeight > 0)
+                PatientCollectionView.HeightRequest = appHeight - 110;
+                await Task.Delay(100);
+                firstAppearing = false;
+            }
+            await LoadPatientListAsync();
+            if (updated_data)
+            {
+                await Task.Run(async () =>
                 {
-                    PatientCollectionView.HeightRequest = appHeight - 110;
-                }
-            };
+                    await LoadDicomFilesAsync();
+                    await SavePatientListAsync();
+                    updated_data = false;
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        OnPropertyChanged(nameof(PatientList));
+                    });
+                });
+            }
+        }
+        private static readonly Dictionary<string, string> ModalityShortNames = new Dictionary<string, string>
+        {
+            { "RTSTRUCT", "RS" },
+            { "RTPLAN", "RP" },
+            { "RTDOSE", "RD" },
+            { "CT", "CT" },
+            { "MR", "MR" }
+        };
+        private async Task SavePatientListAsync()
+        {
+            string json = JsonSerializer.Serialize(PatientList);
+            string path = Path.Combine(FileSystem.AppDataDirectory, "patient_list.json");
+            await File.WriteAllTextAsync(path, json);
         }
 
+        private async Task LoadPatientListAsync()
+        {
+            string filePath = Path.Combine(FileSystem.AppDataDirectory, "patient_list.json");
+            if (File.Exists(filePath))
+            {
+                string json = await File.ReadAllTextAsync(filePath);
+                var list = JsonSerializer.Deserialize<ObservableCollection<PatientNode>>(json);
+                if (list != null)
+                {
+                    PatientList = new ObservableCollection<PatientNode>(list);
+                    OnPropertyChanged(nameof(PatientList));
+                }
+            }
+            else
+            {
+                await LoadDicomFilesAsync();
+            }
+            StorageSize = GetFolderSizeGB(_storagePath);
+        }
+        private Dictionary<string, DateTime> fileTimestamps = new();
         public async Task LoadDicomFilesAsync()
         {
-            LoadingIndicator.IsRunning = true;
-            LoadingIndicator.IsVisible = true;
-            PatientList.Clear();
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                LoadingIndicator.IsRunning = true;
+                LoadingIndicator.IsVisible = true;
+                PatientCollectionView.IsVisible = false;
+            });
+            await Task.Delay(100);
+            Dictionary<string, DateTime> newFileTimestamps = new Dictionary<string, DateTime>();
             try
             {
                 foreach (var directory in Directory.GetDirectories(_storagePath))
                 {
                     var patientNode = new PatientNode
                     {
-                        Images = new ObservableCollection<ImageNode>(),
+                        Images = new List<ImageNode>(),
                         IsImagesVisible = false
                     };
 
@@ -98,48 +145,77 @@ namespace SATOMI.Pages
                         patientNode.PatientName = Path.GetFileName(directory);
                         patientNode.StudyUID = "Unknown StudyUID";
                     }
-
-                    await AddDicomFilesFromDirectoryAsync(directory, patientNode);
-
-                    if (patientNode.Images.Count > 0)
+                    int index = PatientList.Select((patient, idx) => new { patient, idx })
+                       .FirstOrDefault(x => x.patient.StudyUID == patientNode.StudyUID)?.idx ?? -1;
+                    if (index != -1)
                     {
-                        PatientList.Add(patientNode);
+                        await AddDicomFilesFromDirectoryAsync(directory, PatientList[index]);
+                    }
+                    else
+                    {
+                        await AddDicomFilesFromDirectoryAsync(directory, patientNode);
+                        if (patientNode.Images.Count > 0)
+                        {
+                            PatientList.Add(patientNode);
+                        }
                     }
                 }
                 StorageSize = GetFolderSizeGB(_storagePath);
             }
             finally
             {
-                LoadingIndicator.IsRunning = false;
-                LoadingIndicator.IsVisible = false;
+                updated_data = false;
+                await SavePatientListAsync();
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    OnPropertyChanged(nameof(PatientList));
+                    LoadingIndicator.IsRunning = false;
+                    LoadingIndicator.IsVisible = false;
+                    PatientCollectionView.IsVisible = true;
+                });
+                await Task.Delay(100);
             }
         }
         private async Task AddDicomFilesFromDirectoryAsync(string directory, PatientNode patientNode)
         {
-            // DICOMファイルを現在のディレクトリから非同期で取得
             foreach (var file in Directory.GetFiles(directory, "*.dcm"))
             {
-                var dicomFile = DicomFile.Open(file);
-                var imageNode = new ImageNode
+                if (patientNode.Images != null)
                 {
-                    ImageType = dicomFile.Dataset.GetString(DicomTag.Modality),
-                    ImagePath = file
-                };
-                if(patientNode.Images != null)
-                {
+                    if (patientNode.Images.Any(img => img.ImagePath == file))
+                    {
+                        continue; 
+                    }
+                    var dicomFile = DicomFile.Open(file);
+
+                    string? referencedSOPInstanceUID = null;
+                    if (dicomFile.Dataset.Contains(DicomTag.ReferencedFrameOfReferenceSequence))
+                    {
+                        var refFrameSeq = dicomFile.Dataset.GetSequence(DicomTag.ReferencedFrameOfReferenceSequence)?.FirstOrDefault();
+                        var refStudySeq = refFrameSeq?.GetSequence(DicomTag.RTReferencedStudySequence)?.FirstOrDefault();
+                        var refSeriesSeq = refStudySeq?.GetSequence(DicomTag.RTReferencedSeriesSequence)?.FirstOrDefault();
+                        referencedSOPInstanceUID = refSeriesSeq?.GetString(DicomTag.SeriesInstanceUID);
+                    }
+                    var imageTypeShort = ModalityShortNames.TryGetValue(dicomFile.Dataset.GetString(DicomTag.Modality), out var shortName) ? shortName : dicomFile.Dataset.GetString(DicomTag.Modality);
+                    var imageNode = new ImageNode
+                    {
+                        ImageType = imageTypeShort,
+                        SeriesInstanceUID = dicomFile.Dataset.GetString(DicomTag.SeriesInstanceUID),
+                        ReferenceSeriesInstanceUID = referencedSOPInstanceUID,
+                        ImagePath = file
+                    };
+
                     patientNode.Images.Add(imageNode);
                 }
             }
-
-            // サブディレクトリも再帰的に非同期で検索
             foreach (var subDirectory in Directory.GetDirectories(directory))
             {
                 await AddDicomFilesFromDirectoryAsync(subDirectory, patientNode);
             }
+            OnPropertyChanged(nameof(patientNode.ImageCount));
         }
         public static double GetFolderSizeGB(string folderPath)
         {
-            // フォルダが存在しない場合
             if (!Directory.Exists(folderPath))
             {
                 throw new DirectoryNotFoundException($"The directory '{folderPath}' does not exist.");
@@ -152,32 +228,74 @@ namespace SATOMI.Pages
             foreach (var file in files)
             {
                 FileInfo fileInfo = new FileInfo(file);
-                totalSize += fileInfo.Length;  // ファイルのサイズ（バイト単位）
+                totalSize += fileInfo.Length; 
             }
             return Math.Round(totalSize / (1024.0 * 1024.0 * 1024.0), 3);
         }
         private async void OnPatientButtonClicked(object sender, EventArgs e)
         {
+            
             if (sender is Button button && button.BindingContext is PatientNode patientNode)
             {
-                bool confirm = await DisplayAlert("Confirmation", $"Do you want to open {patientNode.PatientName}?", "Cancel", "Open");
-                if (!confirm)
+                var seriesList = patientNode.ImageSeriesSummary;
+                if (seriesList.Count == 1)
                 {
-                    var node_StudyUID = patientNode.StudyUID;
-                    if (node_StudyUID != null)
+                    var selectedStudy = seriesList.First(); 
+                    ProcessSelectedStudy(selectedStudy);
+                }
+                else
+                {
+                    var options = seriesList.Select(s => s.ToString()).ToArray();
+
+                    string selected_option = await DisplayActionSheet("ActionSheet: Open ?", "Cancel", null, options);
+                    if (selected_option != "Cancel" && !string.IsNullOrEmpty(selected_option))
                     {
-                        string patientDirectory = Path.Combine(_storagePath, node_StudyUID);
-                        if (Directory.Exists(patientDirectory))
+                        var selectedStudy = seriesList.FirstOrDefault(s => s.ToString() == selected_option);
+                        if (selectedStudy != null)
                         {
-                            if (!patientDirectory.EndsWith("/"))
-                            {
-                                patientDirectory = string.Concat(patientDirectory, "/");
-                            }
-                            await Shell.Current.GoToAsync($"//ViewerPage?Location={patientDirectory}");
+                            ProcessSelectedStudy(selectedStudy); 
                         }
                     }
                 }
             }
+        }
+        private async void ProcessSelectedStudy(SeriesSummary selectedStudy)
+        {
+            string application_path = FileSystem.AppDataDirectory;
+            string work_space = Path.Combine(application_path, "WORKSPACE");
+
+            if (Directory.Exists(work_space))
+            {
+                Directory.Delete(work_space, true); 
+            }
+
+            Directory.CreateDirectory(work_space); 
+
+            foreach (var imagePath in selectedStudy.ImagePaths)
+            {
+                if (File.Exists(imagePath))
+                {
+                    var destinationPath = Path.Combine(work_space, Path.GetFileName(imagePath));
+                    File.Copy(imagePath, destinationPath, overwrite: true); 
+                }
+            }
+
+            foreach (var referencedSeries in selectedStudy.ReferencedImages)
+            {
+                foreach (var imagePath in referencedSeries.ImagePaths)
+                {
+                    if (File.Exists(imagePath))
+                    {
+                        var destinationPath = Path.Combine(work_space, Path.GetFileName(imagePath));
+                        File.Copy(imagePath, destinationPath, overwrite: true); 
+                    }
+                }
+            }
+            if (!work_space.EndsWith("/"))
+            {
+                work_space = string.Concat(work_space, "/");
+            }
+            await Shell.Current.GoToAsync($"//ViewerPage?Location={work_space}");
         }
         private async void OnDeletePatientClicked(object sender, EventArgs e)
         {
@@ -193,13 +311,10 @@ namespace SATOMI.Pages
                         string patientDirectory = Path.Combine(_storagePath, node_StudyUID);
                         if (Directory.Exists(patientDirectory))
                         {
-                            // .dcmファイルを削除
                             foreach (var file in Directory.GetFiles(patientDirectory, "*.dcm"))
                             {
                                 File.Delete(file);
                             }
-
-                            // フォルダが空なら削除
                             if (Directory.GetFiles(patientDirectory).Length == 0 &&
                                 Directory.GetDirectories(patientDirectory).Length == 0)
                             {
@@ -207,6 +322,7 @@ namespace SATOMI.Pages
                             }
                         }
                         StorageSize = GetFolderSizeGB(_storagePath);
+                        await SavePatientListAsync();
                     }                    
                 }
             }
@@ -224,22 +340,130 @@ namespace SATOMI.Pages
         }
     }
 
-    public class PatientNode
+    public class PatientNode : INotifyPropertyChanged
     {
-        public string? PatientID { get; set; } 
-        public string? PatientName { get; set; }  
-        public ObservableCollection<ImageNode>? Images { get; set; }  
-        public bool IsImagesVisible { get; set; } 
+        public string? PatientID { get; set; }
+        public string? PatientName { get; set; }
+        public List<ImageNode> Images { get; set; } = new();
+        public bool IsImagesVisible { get; set; }
         public string? StudyUID { get; set; }
-        public string ModalityList => Images?.Any() == true
+
+        public string ModalityList => Images.Any()
             ? string.Join(", ", Images.Select(img => img.ImageType).Distinct())
-            : string.Empty;  
-        public int ImageCount => Images?.Count ?? 0;
+            : string.Empty;
+
+        public List<SeriesSummary> ImageSeriesSummary { get; private set; } = new();
+
+        private string _imageCount = "No images";
+        public string ImageCount
+        {
+            get
+            {
+                UpdateImageSeriesSummary();
+                var newCount = string.Join("\n", ImageSeriesSummary.Select(s => s.ToString()));
+                if (_imageCount != newCount)
+                {
+                    _imageCount = newCount;
+                    OnPropertyChanged(nameof(ImageCount));
+                }
+                return _imageCount;
+            }
+        }
+
+        private void UpdateImageSeriesSummary()
+        {
+            if (Images == null || !Images.Any())
+            {
+                ImageSeriesSummary.Clear();
+                return;
+            }
+
+            var imagesWithReferencedSeries = Images
+                .Where(img => !string.IsNullOrEmpty(img.ReferenceSeriesInstanceUID))
+                .GroupBy(img => img.SeriesInstanceUID)
+                .Select(group => new
+                {
+                    SeriesInstanceUID = group.Key,
+                    Images = group.ToList(),
+                    ImageTypes = group.Select(img => img.ImageType).Distinct().ToList(),
+                    ImagePaths = group.Select(img => img.ImagePath).Distinct().ToList()
+                })
+                .ToList();
+
+            var imagesWithoutReferencedSeries = Images
+                .Where(img => string.IsNullOrEmpty(img.ReferenceSeriesInstanceUID))
+                .GroupBy(img => img.SeriesInstanceUID)
+                .Select(group => new
+                {
+                    SeriesInstanceUID = group.Key,
+                    Images = group.ToList(),
+                    ImageTypes = group.Select(img => img.ImageType).Distinct().ToList(),
+                    ImagePaths = group.Select(img => img.ImagePath).Distinct().ToList()
+                })
+                .ToList();
+
+            ImageSeriesSummary.Clear();
+
+            foreach (var group in imagesWithoutReferencedSeries)
+            {
+                var referencedImages = imagesWithReferencedSeries
+                    .Where(referencedGroup => referencedGroup.Images
+                        .Any(img => img.ReferenceSeriesInstanceUID == group.SeriesInstanceUID))
+                    .Select(referencedGroup => new ReferencedSeries
+                    {
+                        SeriesInstanceUID = referencedGroup.SeriesInstanceUID,
+                        ImageTypes = referencedGroup.ImageTypes.Select(x => x ?? "").ToList(),
+                        ImagePaths = referencedGroup.ImagePaths,
+                        ImageCount = referencedGroup.Images.Count
+                    })
+                    .ToList();
+
+                ImageSeriesSummary.Add(new SeriesSummary
+                {
+                    ImageType = group.ImageTypes.FirstOrDefault() ?? "Unknown",
+                    ImageCount = group.Images.Count,
+                    ImagePaths = group.ImagePaths,
+                    ReferencedImages = referencedImages
+                });
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 
     public class ImageNode
     {
-        public string? ImageType { get; set; }  // Modality情報
-        public string? ImagePath { get; set; }  // 画像ファイルパス
+        public string? ImageType { get; set; }
+        public string? SeriesInstanceUID { get; set; }
+        public string? ReferenceSeriesInstanceUID { get; set; }
+        public string? ImagePath { get; set; }
+    }
+
+    public class SeriesSummary
+    {
+        public string ImageType { get; set; } = "Unknown";
+        public int ImageCount { get; set; }
+        public List<string?> ImagePaths { get; set; } = new();
+        public List<ReferencedSeries> ReferencedImages { get; set; } = new();
+        public override string ToString()
+        {
+            var referencedInfo = ReferencedImages.Any()
+                ? string.Join(" ", ReferencedImages.Select(r => $"{string.Join(" ", r.ImageTypes)} {r.ImageCount}"))
+                : string.Empty;
+
+            return $"{ImageType}: {ImageCount} {referencedInfo}".Trim();
+        }
+    }
+
+    public class ReferencedSeries
+    {
+        public List<string?> ImagePaths { get; set; } = new();
+        public string? SeriesInstanceUID { get; set; }
+        public List<string> ImageTypes { get; set; } = new();
+        public int ImageCount { get; set; }
     }
 }

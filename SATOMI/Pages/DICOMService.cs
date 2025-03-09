@@ -55,18 +55,15 @@ namespace SATOMI.Pages
 
             private static readonly DicomTransferSyntax[] _acceptedImageTransferSyntaxes = new DicomTransferSyntax[]
             {
-               // Lossless
                DicomTransferSyntax.JPEGLSLossless,
                DicomTransferSyntax.JPEG2000Lossless,
                DicomTransferSyntax.JPEGProcess14SV1,
                DicomTransferSyntax.JPEGProcess14,
                DicomTransferSyntax.RLELossless,
-               // Lossy
                DicomTransferSyntax.JPEGLSNearLossless,
                DicomTransferSyntax.JPEG2000Lossy,
                DicomTransferSyntax.JPEGProcess1,
                DicomTransferSyntax.JPEGProcess2_4,
-               // Uncompressed
                DicomTransferSyntax.ExplicitVRLittleEndian,
                DicomTransferSyntax.ExplicitVRBigEndian,
                DicomTransferSyntax.ImplicitVRLittleEndian
@@ -127,13 +124,14 @@ namespace SATOMI.Pages
                     var window = Application.Current?.Windows.FirstOrDefault();
                     if (window?.Page != null)
                     {
-                        var currentPage =  Shell.Current?.CurrentPage;
+                        var currentPage = Shell.Current?.CurrentPage;
                         if (currentPage is PatientListPage patientListPage)
                         {
                             await patientListPage.LoadDicomFilesAsync();
                         }
                     }
                 });
+                PatientListPage.updated_data = true;
                 return SendAssociationReleaseResponseAsync();
             }
 
@@ -180,7 +178,6 @@ namespace SATOMI.Pages
 
             public Task OnCStoreRequestExceptionAsync(string tempFileName, Exception e)
             {
-                // let library handle logging and error response
                 return Task.CompletedTask;
             }
 

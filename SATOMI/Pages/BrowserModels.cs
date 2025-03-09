@@ -31,7 +31,6 @@ namespace SATOMI.Pages
     public class FileFolderView
     {
         public string Location { get; }
-        //public string SwipeText { get; }
         public Color SwipeColor { get; }
         public bool IsSelected { get; set; }
         public bool IsFolder { get; }
@@ -52,7 +51,6 @@ namespace SATOMI.Pages
             {
                 Backbtn = true;
                 CanSwipe = false;
-                //SwipeText = "     cannot perform a swipe action.";
                 SwipeColor = Colors.Gray;
             }
             else
@@ -68,21 +66,18 @@ namespace SATOMI.Pages
                                                             !d.Contains(".thumbnails"))
                                                             .Any();
                         CanSwipe = HasChildren;
-                        //SwipeText = HasChildren ? "     open directory" : "     not found child directory";
                         SwipeColor = HasChildren ? Colors.DarkBlue : Colors.Gray;
                     }
                     catch (Exception)
                     {
                         HasChildren = false;
                         CanSwipe = false;
-                        //SwipeText = "     cannot perform a swipe action.";
                         SwipeColor = Colors.Gray;
                     }
                 }
                 else
                 {
                     HasChildren = false;
-                    //SwipeText = "     cannot perform a swipe action.";
                     SwipeColor = Colors.Gray;
                 }
             }

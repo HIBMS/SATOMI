@@ -68,6 +68,7 @@ namespace SATOMI.Pages
                 }
 #endif
             }
+
             canvas.DrawImage(UI.ImageInfo._current_img, (float)ViewerPage._offsetX, (float)ViewerPage._offsetY, ViewerPage.DesiredWidth, ViewerPage.DesiredHeight);
         }
 #if ANDROID
@@ -90,7 +91,7 @@ namespace SATOMI.Pages
             Parallel.For(0, pixelData.Length, i =>
             {
                 int gray = pixelData[i];
-                pixels[i] = Android.Graphics.Color.Argb(255, gray, gray, gray); // グレースケール
+                pixels[i] = Android.Graphics.Color.Argb(255, gray, gray, gray); 
             });
 
             bitmap.SetPixels(pixels, 0, width, 0, 0, width, height);
@@ -113,7 +114,6 @@ namespace SATOMI.Pages
                 }
             }
         }
-
 #endif
         }
 }

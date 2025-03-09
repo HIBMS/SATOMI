@@ -5,18 +5,15 @@
              xmlns:drawables="clr-namespace:SATOMI.Pages"
              xmlns:epj="clr-namespace:epj.ProgressBar.Maui;assembly=epj.ProgressBar.Maui"
              xmlns:local="clr-namespace:SATOMI.Pages"
-             BackgroundColor="#000000"
-             Title="">
+             BackgroundColor="#000000">
     <ContentPage.Resources>
         <drawables:CanvasDraw x:Key="FrameDraw" />
     </ContentPage.Resources>
-    <Grid RowDefinitions="110, * , 70">
+    <Grid RowDefinitions="Auto, * , 70">
         <GraphicsView x:Name="GFX"
                   Grid.Row="0"
                   Grid.RowSpan="3"
                   Drawable="{StaticResource FrameDraw}"
-                  HorizontalOptions="FillAndExpand"
-                  VerticalOptions="FillAndExpand"
                   InputTransparent="False"
                   >
             <GraphicsView.GestureRecognizers>
@@ -25,17 +22,17 @@
                 <PinchGestureRecognizer PinchUpdated="OnPinchUpdated"/>
             </GraphicsView.GestureRecognizers>
         </GraphicsView>
-
-        <Grid x:Name="GridDicomInfo" x:DataType="local:DicomInfoModel"
-              Grid.Row="1" Padding="10" Grid.RowSpan="3" VerticalOptions="Start"
+        <ActivityIndicator x:Name="LoadingIndicator" IsRunning="false" IsVisible="false" HorizontalOptions="Center" VerticalOptions="Center" Grid.Row="0" Grid.RowSpan="3" />
+        <Grid x:Name="GridDicomInfo" x:DataType="local:DicomInfoModel" 
+              Grid.Row="1" Padding="10" Grid.RowSpan="3" VerticalOptions="Start" ColumnDefinitions="*,*"
               BackgroundColor="#00000080"
               Margin="10"
               AbsoluteLayout.LayoutBounds="0, 0, 1, 1"
               AbsoluteLayout.LayoutFlags="All">
-            <Label x:Name="LblPatientInfo" FontSize="Small" Text="{Binding PatientInfo}" TextColor="White" HorizontalOptions="Start" />
-            <Label x:Name="LblStudyInfo" FontSize="Micro" Text="{Binding StudyInfo}" TextColor="White" HorizontalOptions="End" />
+            <Label x:Name="LblPatientInfo" FontSize="Small" Grid.Column="0" Text="{Binding PatientInfo}" TextColor="White" HorizontalTextAlignment="Start" />
+            <Label x:Name="LblStudyInfo" FontSize="Micro" Grid.Column="1" Text="{Binding StudyInfo}" TextColor="White" HorizontalTextAlignment="End"  />
         </Grid>
-        
+
         <Grid x:Name="GridProgBar" x:DataType="local:ProgressModel" Padding="0,0,0,50" VerticalOptions="End" IsVisible="False"
               AbsoluteLayout.LayoutBounds="0, 0, 1, 1" AbsoluteLayout.LayoutFlags="All" Grid.Row="1">
             <VerticalStackLayout>
@@ -49,36 +46,56 @@
             </VerticalStackLayout>
         </Grid>
 
-        <Grid x:Name="GridHeader" BackgroundColor="Transparent" RowDefinitions="*,*,*" ColumnDefinitions="Auto, *, *" ColumnSpacing="10" Padding="0" Grid.Row="0">
-            <Border StrokeThickness="0" Background="#1AFFFFFF" Padding="16" Grid.RowSpan="3" Grid.Row="0" Grid.Column="0"
-        StrokeShape="RoundRectangle 20" Margin="10" HorizontalOptions="End">
+        <Grid x:Name="GridHeader" RowDefinitions="*,*" ColumnDefinitions="Auto, *" ColumnSpacing="5" Padding="0" Grid.Row="0">
+            <Border StrokeThickness="0"  Padding="16" Grid.Row="0" Grid.Column="0" HeightRequest="80" HorizontalOptions="End"
+                    StrokeShape="RoundRectangle 20" Margin="5" >
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#1AFFFFFF" Offset="0.0"/>
+                        <GradientStop Color="#555555" Offset="0.5"/>
+                        <GradientStop Color="#333333" Offset="1.0"/>
+                    </LinearGradientBrush>
+                </Border.Background>
                 <Button x:Name="NaviBtn" Text="SATOMI Menu" Margin="0"
                         Clicked="Navigation_Clicked" BackgroundColor="Transparent" TextColor="#FFFFFF" 
                         FontSize="16" FontAttributes="Bold" 
                         HorizontalOptions="Fill" VerticalOptions="Fill">
                 </Button>
             </Border>
-            <Label Text="Window Level:" TextColor="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="0" Grid.Column="1"/>
-            <Entry x:Name="EntryWindowLevel" x:DataType="local:ImageInfoModel"
+            <Grid Grid.Column="1" RowDefinitions="*,*,*" Margin="5" ColumnDefinitions="*,*" WidthRequest="200">
+                <Label Text="Window Level:" TextColor="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="0" Grid.Column="0"/>
+                <Entry x:Name="EntryWindowLevel" x:DataType="local:ImageInfoModel" HeightRequest="30"
                    Text="{Binding WL}" Keyboard="Numeric" Completed="Entry_Completed"
                    TextColor="{StaticResource Secondary}"  PlaceholderColor="Gray"
-                   FontSize="14" HorizontalTextAlignment="Center" Grid.Row="1" Grid.Column="1" />
-            <Label Text="Window Width:" TextColor="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="0" Grid.Column="2"/>
-            <Entry x:Name="EntryWindowWidth" x:DataType="local:ImageInfoModel" 
+                   FontSize="14" HorizontalTextAlignment="Center" Grid.Row="1" Grid.Column="0" />
+                <Label Text="Window Width:" TextColor="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="0" Grid.Column="1"/>
+                <Entry x:Name="EntryWindowWidth" x:DataType="local:ImageInfoModel" HeightRequest="30"
                    Text="{Binding WW}" Keyboard="Numeric" Completed="Entry_Completed"
                    TextColor="{StaticResource Secondary}"  PlaceholderColor="Gray"
-                   FontSize="14" HorizontalTextAlignment="Center" Grid.Row="1" Grid.Column="2"/>
-            <Picker x:Name="WWWLManager"  SelectedIndexChanged="OnPickerSelectedIndexChanged" Grid.Column="1" Grid.Row ="2"  Grid.ColumnSpan="2" HorizontalTextAlignment="Center" SelectedIndex="0" TextColor="{StaticResource Secondary}" >
-                <Picker.ItemsSource>
-                    <x:Array Type="{x:Type x:String}">
-                        <x:String>Default</x:String>
-                        <x:String>Head</x:String>
-                        <x:String>Chest</x:String>
-                        <x:String>Abdomen</x:String>
-                        <x:String>Bone</x:String>
-                    </x:Array>
-                </Picker.ItemsSource>
-            </Picker>
+                   FontSize="14" HorizontalTextAlignment="Center" Grid.Row="1" Grid.Column="1"/>
+                <Picker x:Name="WWWLManager"  SelectedIndexChanged="OnPickerSelectedIndexChanged" Grid.Column="0" Grid.Row ="2" HeightRequest="30" Grid.ColumnSpan="2" HorizontalTextAlignment="Center" SelectedIndex="0" TextColor="{StaticResource Secondary}" >
+                    <Picker.ItemsSource>
+                        <x:Array Type="{x:Type x:String}">
+                            <x:String>Default</x:String>
+                            <x:String>Head</x:String>
+                            <x:String>Chest</x:String>
+                            <x:String>Abdomen</x:String>
+                            <x:String>Bone</x:String>
+                        </x:Array>
+                    </Picker.ItemsSource>
+                </Picker>
+            </Grid>
+            <Grid Grid.Row="4" ColumnDefinitions="*,*,*" Grid.ColumnSpan="3" ColumnSpacing="10" Margin="5">
+                <Button x:Name="AxialView" Text="Axial" Grid.Column="0" Margin="0" Clicked="Axial_Clicked" BackgroundColor="{StaticResource Primary}" TextColor="#FFFFFF" 
+                        FontSize="16" FontAttributes="Bold" HorizontalOptions="Fill" VerticalOptions="Fill">
+                </Button>
+                <Button x:Name="SagittalView" Text="Sagittal" Grid.Column="1" Margin="0" Clicked="Sagittal_Clicked" BackgroundColor="{StaticResource Primary}" TextColor="#FFFFFF" 
+                        FontSize="16" FontAttributes="Bold" HorizontalOptions="Fill" VerticalOptions="Fill">
+                </Button>
+                <Button x:Name="CoronalView" Text="Coronal" Grid.Column="2" Margin="0" Clicked="Coronal_Clicked" BackgroundColor="{StaticResource Primary}" TextColor="#FFFFFF" 
+                        FontSize="16" FontAttributes="Bold" HorizontalOptions="Fill" VerticalOptions="Fill">
+                </Button>
+            </Grid>
         </Grid>
 
         <Grid x:Name="GridBottom" VerticalOptions="End" Grid.Row="2" >
@@ -94,7 +111,6 @@
                             Pressed="NextSlice_Pressed"
                             Released="NextSlice_Released"
                             Text="☞" Grid.Column="2"  Margin="2" />
-
                     <Label x:Name="LblStartSlider" Text="1" TextColor="White" HorizontalOptions="Start" FontSize="Small" Grid.Column="1"/>
                     <Label x:Name="LblFrameNo" Text="50" TextColor="DimGray" HorizontalOptions="Center" FontSize="Micro" Grid.Column="1" />
                     <Label x:Name="LblEndSlider" Text="100" TextColor="White" HorizontalOptions="End" FontSize="Small" Grid.Column="1" />

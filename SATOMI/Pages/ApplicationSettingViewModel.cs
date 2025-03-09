@@ -14,6 +14,7 @@
  * 
  * Author: s.harada@HIBMS
  */
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -24,20 +25,20 @@ namespace SATOMI.Pages
     {
         public DICOMServerSettings()
         {
-            IpAddress = GetLocalIPAddress();
+            IpAddresses = new ObservableCollection<string>(GetLocalIPAddresses());
             LoadSettings();
         }
         public event PropertyChangedEventHandler? PropertyChanged;
-        private string? _ipaddress;
-        public string? IpAddress
+        private ObservableCollection<string>? ipAddresses;
+        public ObservableCollection<string>? IpAddresses
         {
-            get => _ipaddress;
+            get => ipAddresses;
             set
             {
-                if (_ipaddress != value)
+                if (ipAddresses != value)
                 {
-                    _ipaddress = value;
-                    OnPropertyChanged(nameof(IpAddress));
+                    ipAddresses = value;
+                    OnPropertyChanged(nameof(IpAddresses));
                 }
             }
         }
@@ -71,9 +72,10 @@ namespace SATOMI.Pages
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        private string GetLocalIPAddress()
+        private IEnumerable<string> GetLocalIPAddresses()
         {
-            string ipAddress = "Unknown";
+            var ipList = new List<string>();
+
             foreach (var networkInterface in NetworkInterface.GetAllNetworkInterfaces())
             {
                 if (networkInterface.OperationalStatus == OperationalStatus.Up)
@@ -82,13 +84,12 @@ namespace SATOMI.Pages
                     {
                         if (unicastAddress.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                         {
-                            ipAddress = unicastAddress.Address.ToString();
-                            break;
+                            ipList.Add($"{networkInterface.Name}: {unicastAddress.Address}");
                         }
                     }
                 }
             }
-            return ipAddress;
+            return ipList;
         }
         public void SaveSettings()
         {

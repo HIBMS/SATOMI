@@ -42,6 +42,7 @@ namespace SATOMI.Pages
             base.OnAppearing();
             _ = this.FadeTo(1, 700, Easing.SinIn);
         }
+
         private async void OnSwipeOpen(object sender, EventArgs e)
         {
             FileFolderView? selectedItem = LstView.SelectedItem as FileFolderView;

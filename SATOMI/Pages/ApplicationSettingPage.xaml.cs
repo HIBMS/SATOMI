@@ -30,30 +30,37 @@ namespace SATOMI.Pages
             DICOMServer.BindingContext = DCMServerSettings;
             LoadSettings();
         }
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
+
+            await CheckServerAliveAsync();
+
+            Dispatcher?.StartTimer(TimeSpan.FromSeconds(1), () =>
+            {
+                _ = CheckServerAliveAsync(); 
+                return true; 
+            });
             _ = this.FadeTo(1, 700, Easing.SinIn);
         }
-        // Tab1ボタンがクリックされた場合
+
         private void OnTab1Clicked(object sender, EventArgs e)
         {
-            // タブ1を表示
+
             DICOMServer.IsVisible = true;
             ApplicationSettings.IsVisible = false;
 
-            // ボタンの背景色を変更
             Tab1Button.BackgroundColor = Colors.Transparent; 
             Tab2Button.BackgroundColor = Color.FromRgb(169, 169, 169);
         }
 
         private void OnTab2Clicked(object sender, EventArgs e)
         {
-            // タブ2を表示
+   
             DICOMServer.IsVisible = false;
             ApplicationSettings.IsVisible = true;
 
-            // ボタンの背景色を変更
+            
             Tab1Button.BackgroundColor = Color.FromRgb(169, 169, 169);
             Tab2Button.BackgroundColor = Colors.Transparent;
         }
@@ -70,14 +77,16 @@ namespace SATOMI.Pages
         }
         private void OnStartServerClicked(object sender, EventArgs e)
         {
-            if(DICOMService.StorageServer != null)
+            ServerStatusLabel.Text = "Server is not started";
+            ServerStatusLabel.TextColor = Colors.Red;
+            if (DICOMService.StorageServer != null)
             {
                 DICOMService.StorageServer.Dispose();
             }
             DCMServerSettings.SaveSettings();
             DICOMService.StorageServer = DicomServerFactory.Create<DicomStorageServer>(DCMServerSettings.PortNumber);
         }
-        // 設定の読み込み
+        
         private void LoadSettings()
         {
             DCMServerSettings.AeTitle = Preferences.Get("SCPAeTitle", ""); 
@@ -90,6 +99,36 @@ namespace SATOMI.Pages
             {
                 DCMServerSettings.PortNumber = 4649;  
             }
+        }
+        private Task CheckServerAliveAsync()
+        {
+            if (StorageServer == null)
+            {
+                ServerStatusLabel.Text = "Server is not started";
+                ServerStatusLabel.TextColor = Colors.Red;
+                return Task.CompletedTask;
+            }
+            try
+            {
+                bool isAlive = StorageServer.IsListening; 
+                if (isAlive)
+                {
+                    ServerStatusLabel.Text = "Server is running";
+                    ServerStatusLabel.TextColor = Colors.White;
+                }
+                else
+                {
+                    ServerStatusLabel.Text = "Server is not running";
+                    ServerStatusLabel.TextColor = Colors.Red;
+                }
+            }
+            catch
+            {
+                ServerStatusLabel.Text = "Server is not running";
+                ServerStatusLabel.TextColor = Colors.Red;
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

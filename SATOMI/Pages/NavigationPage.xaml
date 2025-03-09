@@ -4,7 +4,8 @@
              x:Class="SATOMI.Pages.NavigationPage"
              BackgroundColor="Black"
              >
-    <VerticalStackLayout Padding="30" Spacing="25"
+    <ScrollView>
+        <VerticalStackLayout Padding="30" Spacing="25"
                      VerticalOptions="Center">
         <VerticalStackLayout.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -18,8 +19,7 @@
            FontAttributes="Bold"
            TextColor="White"
            HorizontalOptions="Center"/>
-        <!-- Image Viewer Button -->
-        <Border StrokeThickness="0" Background="#1AFFFFFF" Padding="12"
+            <Border StrokeThickness="0" Background="#1AFFFFFF" Padding="12"
             StrokeShape="RoundRectangle 16">
             <Button Text="Image Viewer"
                 Clicked="ImageViewer"
@@ -29,7 +29,6 @@
                 Padding="15"/>
         </Border>
 
-        <!-- DICOM Communication Button -->
         <Border StrokeThickness="0" Background="#1AFFFFFF" Padding="12"
             StrokeShape="RoundRectangle 16">
             <Button Text="DICOM Storage"
@@ -40,7 +39,6 @@
                 Padding="15"/>
         </Border>
 
-        <!-- Import Local Files Button -->
         <!--<Border StrokeThickness="0" Background="#1AFFFFFF" Padding="12"
             StrokeShape="RoundRectangle 16">
             <Button Text="📂Import Local Files"
@@ -51,7 +49,6 @@
                 Padding="15"/>
         </Border>-->
 
-        <!-- Application Settings Button -->
         <Border StrokeThickness="0" Background="#1AFFFFFF" Padding="12"
             StrokeShape="RoundRectangle 16">
             <Button Text="⚙️ Application Settings"
@@ -62,5 +59,6 @@
                 Padding="15"/>
         </Border>
 
-    </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

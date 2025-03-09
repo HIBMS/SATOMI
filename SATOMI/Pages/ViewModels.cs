@@ -10,7 +10,6 @@
  * - ImageInfoModel: Stores current DICOM image and windowing parameters (WW/WL)
  * - DicomInfoModel: Stores patient and study metadata with property change notifications
  * - ProgressModel: Tracks loading progress with text and percentage updates
- * - ImageRoot: Represents root folders and file paths for DICOM images
  * - UI (static class): Provides global access to UI-related models and methods
  * 
  * Author: s.harada@HIBMS
@@ -29,21 +28,14 @@ namespace SATOMI.Pages
         public static ProgressModel ProgressView = new ProgressModel();
         public static DicomInfoModel InfoView = new DicomInfoModel();
         public static ImageInfoModel ImageInfo = new ImageInfoModel();
-        public static List<string> RootList = new List<string>();
-
-        public static List<ImageRoot> ImageRoots = new List<ImageRoot>();
-
         public static void ClearRoots()
         {
-            ImageRoots.Clear();
-            RootList.Clear();
         }
     }
     public class ImageInfoModel : INotifyPropertyChanged
     {
         public ImageInfoModel() { }
         public event PropertyChangedEventHandler? PropertyChanged;
-
         public Microsoft.Maui.Graphics.IImage? _current_img = null;
         public int current_img_width;
         public int current_img_height;
@@ -185,30 +177,6 @@ namespace SATOMI.Pages
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-    }
-
-    public class ImageRoot
-    {
-        public readonly string RootFolder;
-        public readonly string FullFolderPath;
-        public readonly string FilePath; 
-        public readonly string DisplayString; 
-        public bool IsFolder => FilePath == string.Empty;
-
-        public ImageRoot(string fullFolderPath, string filePath, string displayString)
-        {
-            FullFolderPath = fullFolderPath;
-            FilePath = filePath;
-            DisplayString = displayString;
-            if (IsFolder)
-            {
-                RootFolder = Path.GetFileName(FullFolderPath) ?? "Unknown";
-            }
-            else
-            {
-                RootFolder = ""; 
-            }
         }
     }
 }
